@@ -17,3 +17,4 @@ apps/extension/dist/
 *.zip
 .DS_Store
 
+scripts/.media-tmp/

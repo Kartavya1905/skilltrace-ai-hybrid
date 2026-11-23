@@ -1,0 +1,53 @@
+WEBVTT
+
+1
+00:00:00.600 --> 00:00:04.950
+This is an audio lesson on the basics of the SQL SELECT statement.
+
+2
+00:00:05.350 --> 00:00:13.259
+SQL is the language used to ask questions of relational databases, where data lives in tables made of rows and columns.
+
+3
+00:00:14.159 --> 00:00:21.269
+Every query starts with SELECT, followed by the columns you want, and FROM, followed by the table.
+
+4
+00:00:21.669 --> 00:00:28.953
+For example, select name comma email from students returns two columns for every row in the students table.
+
+5
+00:00:29.353 --> 00:00:35.843
+Select star returns every column, which is handy for exploring but wasteful in production code.
+
+6
+00:00:36.743 --> 00:00:40.522
+The WHERE clause keeps only the rows that match a condition.
+
+7
+00:00:40.922 --> 00:00:47.502
+For example, where enrolled year equals twenty twenty six keeps only students who enrolled this year.
+
+8
+00:00:47.902 --> 00:00:51.576
+You can combine conditions with and, or, and not.
+
+9
+00:00:52.476 --> 00:00:59.276
+ORDER BY sorts the result by one or more columns, in ascending order unless you add the keyword descending.
+
+10
+00:00:59.676 --> 00:01:05.535
+LIMIT caps the number of rows returned, which is useful for top ten style questions.
+
+11
+00:01:05.935 --> 00:01:15.195
+Put together, a query can select names from students, filter by year, order by last name, and limit the result to ten rows.
+
+12
+00:01:16.095 --> 00:01:26.324
+To recap: SELECT chooses columns, FROM chooses the table, WHERE filters rows, ORDER BY sorts them, and LIMIT caps how many come back.
+
+13
+00:01:26.724 --> 00:01:31.934
+That covers the core of most everyday queries. Thanks for listening.

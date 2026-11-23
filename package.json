@@ -6,7 +6,9 @@
   "license": "Apache-2.0",
   "type": "module",
   "packageManager": "pnpm@12.16.1",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "pnpm --filter @skilltrace/web dev",
     "build": "pnpm --filter @skilltrace/web build && pnpm --filter @skilltrace/extension build",
@@ -21,6 +23,7 @@
     "test:rules": "firebase emulators:exec --only firestore --project demo-skilltrace \"vitest run --config tests/rules/vitest.config.ts\"",
     "test:e2e": "playwright test",
     "check:secrets": "node scripts/check-secrets.mjs",
+    "media:generate": "node scripts/generate-lab-media.mjs",
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm check:secrets"
   },
   "devDependencies": {
@@ -35,6 +38,7 @@
     "firebase-tools": "^15.37.0",
     "globals": "^17.14.0",
     "jsdom": "^31.0.1",
+    "mediabunny": "1.66.2",
     "prettier": "^3.10.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.73.0",

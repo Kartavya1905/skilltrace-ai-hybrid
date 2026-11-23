@@ -1,0 +1,65 @@
+WEBVTT
+
+1
+00:00:00.600 --> 00:00:04.079
+Welcome to this short lesson on Python functions.
+
+2
+00:00:04.480 --> 00:00:14.484
+We will cover how to define a function, how parameters and arguments work, what return values are, and how variable scope decides where a name can be seen.
+
+3
+00:00:15.384 --> 00:00:20.524
+You define a function with the def keyword, a name, parentheses, and a colon.
+
+4
+00:00:20.924 --> 00:00:23.823
+The indented lines underneath are the body.
+
+5
+00:00:24.223 --> 00:00:33.468
+Defining a function only stores it. The body runs each time you call the function, for example by writing greet followed by parentheses.
+
+6
+00:00:34.368 --> 00:00:41.742
+Parameters are the names inside the parentheses of the definition. Arguments are the values you pass when you call it.
+
+7
+00:00:42.142 --> 00:00:48.712
+Python matches positional arguments from left to right, or you can pass keyword arguments by name.
+
+8
+00:00:49.112 --> 00:00:53.926
+A parameter can have a default value, so the caller may leave it out.
+
+9
+00:00:54.826 --> 00:00:59.936
+The return statement sends a value back to the caller and ends the function immediately.
+
+10
+00:01:00.336 --> 00:01:04.890
+If a function never reaches a return statement, it returns None.
+
+11
+00:01:05.290 --> 00:01:14.445
+Remember that printing a value is not the same as returning it. You can also return several values, which Python packs into a tuple.
+
+12
+00:01:15.345 --> 00:01:21.954
+Scope decides where a name can be seen. Variables assigned inside a function are local to it.
+
+13
+00:01:22.354 --> 00:01:28.409
+Python looks names up in the order local, enclosing, global, and built in.
+
+14
+00:01:28.809 --> 00:01:35.648
+Assigning to a name inside a function creates a new local variable, so the global value stays unchanged.
+
+15
+00:01:36.548 --> 00:01:44.248
+To recap: functions give logic a name, take inputs through parameters, and hand results back with return.
+
+16
+00:01:44.648 --> 00:01:52.407
+Keep them small and avoid changing global state, and they will be easy to reuse and test. Thanks for watching.

@@ -37,7 +37,7 @@ export default function Overview() {
         <Card title="Learning activity, last 7 days" className="lg:col-span-2">
           <Bars data={week.map((d) => ({ label: d.day.slice(5), value: d.ms }))} format={(v) => `${Math.round(v / 60000)}m`} />
           <p className="mt-2 text-xs text-slate-500">
-            Revision this period: {formatDuration(totals.revisionMs)} · Unverified (not credited): {formatDuration(totals.unverifiedMs)}
+            All-time revision: {formatDuration(totals.revisionMs)} · Unverified (not credited): {formatDuration(totals.unverifiedMs)}
             {totals.pendingClassification > 0 && ` · ${totals.pendingClassification} session(s) awaiting skill detection`}
           </p>
         </Card>

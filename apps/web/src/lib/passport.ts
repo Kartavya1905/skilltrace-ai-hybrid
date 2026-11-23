@@ -77,7 +77,9 @@ export function buildPublicPassport(
     const evidence = new Set<Provenance>();
     const workMs = hours.get(p.id) ?? 0;
     if (workMs > 0) evidence.add('self_reported');
-    if (milestones.length || p.githubUrl) evidence.add('github_metadata');
+    // Label each milestone by its own provenance: only API-fetched ones are "GitHub metadata".
+    if (p.githubUrl || milestones.some((m) => m.provenance === 'github_metadata')) evidence.add('github_metadata');
+    if (milestones.some((m) => m.provenance === 'self_reported')) evidence.add('self_reported');
     if (p.provenance === 'sample_data') evidence.add('sample_data');
     return {
       title: p.title,
