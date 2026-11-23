@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { chromiumPath } from '../../playwright.config';
+import { browserLaunch } from '../../playwright.config';
 
 const extDir = resolve('apps/extension/dist');
 
@@ -17,7 +17,7 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
     stdio: 'ignore',
   });
   const ctx = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'st-ext-')), {
-    executablePath: chromiumPath,
+    ...browserLaunch,
     headless: true,
     args: [
       `--disable-extensions-except=${extDir}`,

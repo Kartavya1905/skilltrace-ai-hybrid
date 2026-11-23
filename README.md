@@ -1,5 +1,7 @@
 # SkillTrace AI: the evidence-backed Skill Passport
 
+[![CI](https://github.com/Kartavya1905/skilltrace-ai-hybrid/actions/workflows/ci.yml/badge.svg)](https://github.com/Kartavya1905/skilltrace-ai-hybrid/actions/workflows/ci.yml)
+
 SkillTrace AI records what you study on pages you approve, detects the skills involved with **Firebase AI Logic hybrid inference** (on-device Gemini Nano in Chrome, with a cloud model only when you allow it), connects the projects you built, and turns real evidence into a shareable **Skill Passport**.
 
 It keeps three kinds of evidence apart and never merges them into one number:

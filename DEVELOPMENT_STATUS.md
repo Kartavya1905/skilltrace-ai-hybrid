@@ -26,6 +26,10 @@ Phase 8 (integration, security, docs) is complete in code. What remains needs ow
 - `pnpm test:e2e`: 2/2 passed (workflow; extension in cached Chromium 1248)
 - `pnpm typecheck`, `pnpm lint`, `pnpm check:secrets`: pass
 
+## Delivery pipeline
+
+Milestones M1–M6 are in docs/pipeline-milestones.md. **M1 (CI quality gate)** adds `.github/workflows/ci.yml` with three jobs: quality, Firestore rules, and E2E. It is verified once the first run on GitHub passes.
+
 ## Open blockers (owner action needed)
 
 1. **Firebase project.** Create it, enable Auth (Google and Email), Firestore, AI Logic (Gemini Developer API) and App Check (reCAPTCHA v3), then fill in `apps/web/.env.local`. See docs/deployment.md.
