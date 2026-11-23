@@ -1,0 +1,95 @@
+rules_version = '2';
+
+// SkillTrace AI security rules.
+//  - Private data lives under users/{uid}/{collection}/{id}: owner-only, allow-listed collections,
+//    validated envelope (id, owner, timestamps, provenance, schema version).
+//  - Business rules enforced server-side where possible: GitHub milestones carry zero hours, project
+//    hours only from manual/timer entries, no client may claim third-party verification.
+//  - public_passports/{shareId} holds only the explicitly published, aggregated passport:
+//    readable by anyone who knows the id (get only, no listing), writable only by its owner.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function privateCollection(c) {
+      return c in [
+        'profile', 'preferences', 'tracking_permissions', 'skills', 'skill_topics',
+        'learning_sources', 'learning_sessions', 'learning_events', 'reading_metrics',
+        'playback_segments', 'engagement_checks', 'assessments', 'projects',
+        'project_skill_links', 'project_work_sessions', 'github_connections',
+        'github_milestones', 'passport_profiles', 'public_share_settings', 'inference_logs'
+      ];
+    }
+
+    function validEnvelope(uid, docId) {
+      let d = request.resource.data;
+      return d.id == docId
+        && d.userId == uid
+        && d.schemaVersion is int
+        && d.createdAt is string && d.createdAt.size() <= 40
+        && d.updatedAt is string && d.updatedAt.size() <= 40
+        && d.provenance is string
+        // Nothing written by a client may claim independent verification.
+        && d.provenance != 'independently_verified';
+    }
+
+    function validByCollection(c) {
+      let d = request.resource.data;
+      return (c != 'github_milestones' || d.durationMs == 0)
+        && (c != 'project_work_sessions' || (
+              d.provenance in ['self_reported', 'timer_recorded']
+              && d.durationMs is number && d.durationMs >= 0 && d.durationMs <= 57600000))
+        && (c != 'learning_sessions' || (
+              d.eligibleMs is number && d.eligibleMs >= 0
+              && d.rawMs is number
+              && d.eligibleIntervals is list && d.eligibleIntervals.size() <= 5000))
+        && (c != 'assessments' || (
+              d.score is int && d.maxScore is int && d.score >= 0 && d.score <= d.maxScore
+              && d.verificationLevel == 'self_attempted_unproctored'))
+        // GitHub: never store access tokens in Firestore.
+        && (c != 'github_connections' || !d.keys().hasAny(['token', 'accessToken', 'access_token', 'refreshToken']));
+    }
+
+    match /users/{uid}/{collection}/{docId} {
+      allow read, delete: if isOwner(uid) && privateCollection(collection);
+      allow create, update: if isOwner(uid)
+        && privateCollection(collection)
+        && validEnvelope(uid, docId)
+        && validByCollection(collection);
+    }
+
+    function validPassport(shareId) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['shareId', 'ownerUid', 'visibility', 'schemaVersion', 'publishedAt',
+          'displayName', 'headline', 'githubUrl', 'portfolioUrl', 'summary', 'skills', 'projects', 'limitations'])
+        && d.shareId == shareId
+        && d.ownerUid == request.auth.uid
+        && d.visibility == 'public'
+        && d.displayName is string && d.displayName.size() <= 80
+        && d.headline is string && d.headline.size() <= 140
+        && d.summary is string && d.summary.size() <= 900
+        && d.skills is list && d.skills.size() <= 50
+        && d.projects is list && d.projects.size() <= 50;
+    }
+
+    match /public_passports/{shareId} {
+      allow get: if resource.data.visibility == 'public';
+      allow list: if false;
+      allow create: if signedIn() && validPassport(shareId);
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid && validPassport(shareId);
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Everything else is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

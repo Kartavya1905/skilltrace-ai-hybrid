@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { EVIDENCE_LABELS, type Provenance } from '@skilltrace/shared';
 

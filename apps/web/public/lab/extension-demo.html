@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python Lists and Dictionaries - SkillTrace extension demo page</title>
+    <style>
+      body { font: 18px/1.7 Georgia, 'Times New Roman', serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #1e293b; background: #fffdf8; }
+      h1, h2 { font-family: system-ui, sans-serif; color: #0f172a; }
+      pre { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 15px; }
+      .note { font: 14px system-ui, sans-serif; background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 8px; }
+    </style>
+  </head>
+  <body>
+    <p class="note">
+      This is an ordinary static page (no SkillTrace code on it) used to demonstrate the Chrome extension. Approve this site in the extension popup, read or
+      play the audio, then sync from the dashboard. Original content, Apache-2.0.
+    </p>
+    <main>
+      <article>
+        <h1>Python Lists and Dictionaries</h1>
+        <h2>Lists hold ordered values</h2>
+        <p>A list is an ordered collection written with square brackets, such as scores = [72, 88, 95]. Lists keep the order in which you add items, they can grow and shrink, and they can hold values of any type. You read an item by its position, called its index, and Python counts from zero, so scores[0] is the first score and scores[-1] is the last one.</p>
+        <p>Because lists are mutable, you can change them in place. The append method adds one item to the end, insert places an item at a chosen position, and remove deletes the first matching value. Slicing with scores[1:3] returns a new list containing the items from index one up to, but not including, index three.</p>
+        <pre>scores = [72, 88, 95]
+scores.append(60)       # [72, 88, 95, 60]
+scores.sort()           # [60, 72, 88, 95]
+top_two = scores[-2:]   # [88, 95]</pre>
+        <h2>Looping over a list</h2>
+        <p>The for statement visits every item in turn. When you also need the position, enumerate gives you pairs of index and value. List comprehensions are a compact way to build a new list from an existing one, for example [s * 1.1 for s in scores] scales every score by ten percent without writing an explicit loop body.</p>
+        <p>A common mistake is changing a list while looping over it, which can skip items. Build a new list instead, or loop over a copy. Another is confusing sort, which changes the list and returns None, with sorted, which returns a new sorted list and leaves the original untouched.</p>
+        <h2>Dictionaries map keys to values</h2>
+        <p>A dictionary stores pairs of keys and values inside curly braces, such as ages = {"ana": 21, "ben": 24}. Instead of looking up items by position, you look them up by key, which is fast even when the dictionary is large. Keys must be immutable values such as strings, numbers or tuples, and each key appears at most once.</p>
+        <p>Assigning to a key either adds a new pair or replaces the existing value. Reading a missing key with square brackets raises KeyError, so the get method is useful when a key might be absent: ages.get("cara", 0) returns zero instead of failing. The items method yields key and value pairs, which makes looping over a dictionary straightforward.</p>
+        <pre>ages = {"ana": 21, "ben": 24}
+ages["cara"] = 19
+for name, age in ages.items():
+    print(name, age)
+oldest = max(ages, key=ages.get)  # "ben"</pre>
+        <h2>Choosing between them</h2>
+        <p>Use a list when order matters and you mostly process items one after another. Use a dictionary when you need to find things by a meaningful key, count occurrences, or group related data. Many real programs combine both: a list of dictionaries is a natural way to represent rows from a spreadsheet or records returned by a web API.</p>
+      </article>
+      <h2>Bonus: SQL SELECT basics (audio)</h2>
+      <audio controls preload="metadata" src="/lab/media/sql-select.webm"></audio>
+    </main>
+  </body>
+</html>

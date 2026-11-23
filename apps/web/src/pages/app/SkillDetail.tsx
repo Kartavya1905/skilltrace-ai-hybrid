@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { formatDuration } from '@skilltrace/shared';
 import { skillDefinition } from '@skilltrace/skill-taxonomy';
-import type { EvidenceExplanation } from '@skilltrace/ai-engine';
 import { useApp } from '../../lib/app-context';
 import { skillAssessments, skillProjects, skillTimelines } from '../../lib/analytics';
 import { Badge, Bars, Button, Card, EmptyState, PageHeader, SourceBadge, Stat } from '../../components/ui';

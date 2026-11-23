@@ -120,7 +120,9 @@ export async function removeSampleData(store: DataStore, data: AppData) {
   for (const c of PRIVATE_COLLECTIONS) {
     if (c === 'learning_events') continue;
     for (const row of data[c] as { id: string; provenance: string }[]) {
-      if (row.provenance === 'sample_data') await store.remove(c, row.id);
+      // Sample work sessions must carry 'self_reported' provenance (project-time rule), so
+      // sample records are also recognised by their reserved id prefix.
+      if (row.provenance === 'sample_data' || row.id.startsWith('sample_')) await store.remove(c, row.id);
     }
   }
 }

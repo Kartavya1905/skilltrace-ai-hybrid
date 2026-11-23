@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { onAuthStateChanged, signOut as fbSignOut } from 'firebase/auth';
 import type { CollectionTypes, PrivateCollection } from '@skilltrace/shared';

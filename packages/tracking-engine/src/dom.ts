@@ -72,6 +72,9 @@ export interface ReadingBindingOptions {
   minDwellMs?: number;
   /** Words per section id (from SessionMeta.sections). */
   sectionWords?: Record<string, number>;
+  /** Map an observed element to its section id (default: data-section-id). Lets the extension
+   * track third-party pages without modifying their DOM. */
+  sectionIdOf?: (el: Element) => string | undefined;
 }
 
 export function bindReading(session: TrackedSession, opts: ReadingBindingOptions, doc: Document = document): () => void {
@@ -79,7 +82,7 @@ export function bindReading(session: TrackedSession, opts: ReadingBindingOptions
   const wpm = opts.wpm ?? 238;
   const dwellShare = opts.dwellShare ?? 0.3;
   const minDwellMs = opts.minDwellMs ?? 3_000;
-  const visible = new Set<string>();
+  const visibleEls = new Map<Element, string>(); // several elements may belong to one section
   const dwell = new Map<string, number>(); // accumulated visible ms since the section last came into view
   const read = new Set<string>();
   let lastEmitted: string | null = null;
@@ -95,15 +98,12 @@ export function bindReading(session: TrackedSession, opts: ReadingBindingOptions
       ? new IntersectionObserver(
           (entries) => {
             for (const entry of entries) {
-              const id = (entry.target as HTMLElement).dataset.sectionId;
+              const id = opts.sectionIdOf?.(entry.target) ?? (entry.target as HTMLElement).dataset.sectionId;
               if (!id) continue;
               const vh = entry.rootBounds?.height ?? window.innerHeight;
               const coversViewport = entry.intersectionRect.height >= vh * visibleRatio;
-              if (entry.isIntersecting && (entry.intersectionRatio >= visibleRatio || coversViewport)) visible.add(id);
-              else {
-                visible.delete(id);
-                dwell.delete(id);
-              }
+              if (entry.isIntersecting && (entry.intersectionRatio >= visibleRatio || coversViewport)) visibleEls.set(entry.target, id);
+              else visibleEls.delete(entry.target);
             }
           },
           { threshold: [0, 0.25, 0.5, 0.75, 1] },
@@ -114,6 +114,9 @@ export function bindReading(session: TrackedSession, opts: ReadingBindingOptions
   // Accumulate visible time once per second while the page is visible.
   const ticker = setInterval(() => {
     if (doc.visibilityState === 'hidden') return;
+    const visible = new Set(visibleEls.values());
+    // A section that left the viewport starts its dwell again when it returns.
+    for (const id of [...dwell.keys()]) if (!visible.has(id)) dwell.delete(id);
     for (const id of visible) {
       const ms = (dwell.get(id) ?? 0) + 1_000;
       dwell.set(id, ms);

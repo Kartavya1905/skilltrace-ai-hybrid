@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SkillTrace AI</title>
+    <style>
+      body { font: 13px system-ui, sans-serif; width: 320px; margin: 0; color: #0f172a; }
+      header { background: #4f46e5; color: #fff; padding: 12px 14px; font-weight: 600; }
+      section { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+      label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 0; }
+      button { background: #4f46e5; color: #fff; border: 0; border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; }
+      button.secondary { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; }
+      button:disabled { background: #a5b4fc; cursor: not-allowed; }
+      ul { list-style: none; padding: 0; margin: 6px 0; }
+      li { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+      .muted { color: #64748b; font-size: 12px; }
+      code { font-size: 11px; word-break: break-all; }
+      a { color: #4338ca; }
+    </style>
+  </head>
+  <body>
+    <header>SkillTrace AI</header>
+    <section>
+      <label>Learning activity tracking <input type="checkbox" id="enabled" /></label>
+      <label>Pause tracking <input type="checkbox" id="paused" /></label>
+      <label>DEMO mode (short checks) <input type="checkbox" id="demo" /></label>
+      <p class="muted">Opt-in. Tracks only the sites listed below. No keystrokes, form fields, microphone or screen.</p>
+    </section>
+    <section>
+      <div><strong>This site:</strong> <span id="site" class="muted">—</span></div>
+      <button id="allow" style="margin-top: 6px">Allow tracking on this site</button>
+      <ul id="origins"></ul>
+    </section>
+    <section>
+      <div><span id="pending">0</span> session(s) ready to sync</div>
+      <p class="muted">Extension ID: <code id="extid"></code></p>
+      <div id="dashboards"></div>
+    </section>
+    <script src="popup.js"></script>
+  </body>
+</html>
