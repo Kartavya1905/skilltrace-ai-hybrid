@@ -19,12 +19,20 @@ export default function PublicPassportPage() {
         <Link to="/" className="flex items-center gap-2 font-semibold">
           <img src="/favicon.svg" alt="" className="h-6 w-6" /> SkillTrace AI
         </Link>
-        <button type="button" className="rounded-lg px-3 py-1.5 ring-1 ring-slate-300 hover:bg-white" onClick={() => window.print()}>
+        <button
+          type="button"
+          className="rounded-lg px-3 py-1.5 ring-1 ring-slate-300 hover:bg-white"
+          onClick={() => window.print()}
+        >
           Print
         </button>
       </div>
       {p === undefined && <p className="text-center text-sm text-slate-500">Loading…</p>}
-      {p === null && <p className="text-center text-sm text-slate-600">This passport does not exist or its owner revoked public sharing.</p>}
+      {p === null && (
+        <p className="text-center text-sm text-slate-600">
+          This passport does not exist or its owner revoked public sharing.
+        </p>
+      )}
       {p && <PassportView p={p} />}
     </div>
   );

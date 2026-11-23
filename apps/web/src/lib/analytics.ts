@@ -1,4 +1,8 @@
-import { buildSkillTimelines, uniqueLearningMs, type SkillTimeline } from '@skilltrace/skill-taxonomy';
+import {
+  buildSkillTimelines,
+  uniqueLearningMs,
+  type SkillTimeline,
+} from '@skilltrace/skill-taxonomy';
 import { projectTimeByProject } from '@skilltrace/tracking-engine';
 import { dayKey, weekKey } from '@skilltrace/shared';
 import type { AppData } from './app-context';
@@ -16,7 +20,9 @@ export function learningTotals(data: AppData) {
     revisionMs: s.reduce((m, x) => m + x.revisionMs, 0),
     unverifiedMs: s.reduce((m, x) => m + x.unverifiedMs, 0),
     sessions: s.length,
-    pendingClassification: s.filter((x) => x.classificationStatus === 'pending' || x.classificationStatus === 'queued_offline').length,
+    pendingClassification: s.filter(
+      (x) => x.classificationStatus === 'pending' || x.classificationStatus === 'queued_offline',
+    ).length,
   };
 }
 
@@ -24,7 +30,11 @@ export function learningTotals(data: AppData) {
 export function dailyActivity(data: AppData, days = 7, now = Date.now()) {
   const out: { day: string; ms: number }[] = [];
   for (let i = days - 1; i >= 0; i--) {
-    const start = Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth(), new Date(now).getUTCDate() - i);
+    const start = Date.UTC(
+      new Date(now).getUTCFullYear(),
+      new Date(now).getUTCMonth(),
+      new Date(now).getUTCDate() - i,
+    );
     const end = start + 86_400_000;
     const clipped = data.learning_sessions.map((s) => ({
       eligibleIntervals: s.eligibleIntervals
@@ -48,7 +58,9 @@ export function projectHours(data: AppData) {
 }
 
 export function skillProjects(data: AppData, skill: string) {
-  return data.projects.filter((p) => p.confirmedByUser && p.status !== 'dismissed' && p.skillNames.includes(skill));
+  return data.projects.filter(
+    (p) => p.confirmedByUser && p.status !== 'dismissed' && p.skillNames.includes(skill),
+  );
 }
 
 export function skillAssessments(data: AppData, skill: string) {

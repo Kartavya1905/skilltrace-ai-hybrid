@@ -23,7 +23,15 @@ const TRIGGER_TEXT: Record<string, string> = {
  * Accessible engagement check. Video checks are a single "I'm here" confirmation; reading checks
  * show a short question. Answering incorrectly has NO time penalty; only not responding counts.
  */
-export function EngagementPrompt({ check, question, onRespond }: { check: CheckRequest | null; question?: QuestionContent | null; onRespond: (correct?: boolean) => void }) {
+export function EngagementPrompt({
+  check,
+  question,
+  onRespond,
+}: {
+  check: CheckRequest | null;
+  question?: QuestionContent | null;
+  onRespond: (correct?: boolean) => void;
+}) {
   const [now, setNow] = useState(Date.now());
   const [picked, setPicked] = useState<number | null>(null);
   useEffect(() => {
@@ -48,17 +56,36 @@ export function EngagementPrompt({ check, question, onRespond }: { check: CheckR
           <legend className="text-sm font-medium text-slate-900">{question.question}</legend>
           <div className="mt-3 space-y-2">
             {question.options.map((o, i) => (
-              <label key={o} className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-slate-200 hover:bg-slate-50">
-                <input type="radio" name="eq" checked={picked === i} onChange={() => setPicked(i)} />
+              <label
+                key={o}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-slate-200 hover:bg-slate-50"
+              >
+                <input
+                  type="radio"
+                  name="eq"
+                  checked={picked === i}
+                  onChange={() => setPicked(i)}
+                />
                 {o}
               </label>
             ))}
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            A wrong answer never removes time. Question source: {question.source === 'author' ? 'lesson author' : question.source === 'on_device' ? 'on-device AI' : question.source === 'in_cloud' ? 'cloud AI' : question.source}.
+            A wrong answer never removes time. Question source:{' '}
+            {question.source === 'author'
+              ? 'lesson author'
+              : question.source === 'on_device'
+                ? 'on-device AI'
+                : question.source === 'in_cloud'
+                  ? 'cloud AI'
+                  : question.source}
+            .
           </p>
           <div className="mt-4 flex gap-2">
-            <Button disabled={picked === null} onClick={() => onRespond(picked === question.correctIndex)}>
+            <Button
+              disabled={picked === null}
+              onClick={() => onRespond(picked === question.correctIndex)}
+            >
               Submit answer
             </Button>
             <Button variant="secondary" onClick={() => onRespond(undefined)}>
@@ -70,8 +97,9 @@ export function EngagementPrompt({ check, question, onRespond }: { check: CheckR
         <div className="mt-4">
           <Button onClick={() => onRespond(undefined)}>I'm here, continue</Button>
           <p className="mt-2 text-xs text-slate-500">
-            Not responding within the window marks only the time since your last check as unverified. Earlier verified time is kept, and the raw log is
-            preserved so you can review or dispute it. Longer response windows are available in Settings.
+            Not responding within the window marks only the time since your last check as
+            unverified. Earlier verified time is kept, and the raw log is preserved so you can
+            review or dispute it. Longer response windows are available in Settings.
           </p>
         </div>
       )}

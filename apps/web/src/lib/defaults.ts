@@ -1,4 +1,9 @@
-import type { PassportProfile, Preferences, PublicShareSettings, UserProfile } from '@skilltrace/shared';
+import type {
+  PassportProfile,
+  Preferences,
+  PublicShareSettings,
+  UserProfile,
+} from '@skilltrace/shared';
 import { envelope, randomId } from '@skilltrace/shared';
 import { DEFAULT_BASELINE_WPM } from '@skilltrace/tracking-engine';
 

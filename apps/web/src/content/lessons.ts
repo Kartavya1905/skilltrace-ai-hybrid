@@ -42,9 +42,15 @@ export const PYTHON_FUNCTIONS_LESSON: ReadingLesson = {
       code: 'def greet():\n    print("Hello from a function")\n\ngreet()  # prints: Hello from a function',
       question: {
         question: 'When does the code inside a function body run?',
-        options: ['As soon as Python reads the def line', 'Only when the function is called', 'Only if the function returns a value', 'When the program ends'],
+        options: [
+          'As soon as Python reads the def line',
+          'Only when the function is called',
+          'Only if the function returns a value',
+          'When the program ends',
+        ],
         correctIndex: 1,
-        explanation: 'Defining a function only stores it. The body runs each time the function is called.',
+        explanation:
+          'Defining a function only stores it. The body runs each time the function is called.',
       },
     },
     {
@@ -58,7 +64,12 @@ export const PYTHON_FUNCTIONS_LESSON: ReadingLesson = {
       code: 'def area(width, height=1):\n    return width * height\n\narea(3, 4)          # 12\narea(5)             # 5  (height defaults to 1)\narea(height=2, width=6)  # 12',
       question: {
         question: 'In def area(width, height=1), what happens when you call area(5)?',
-        options: ['It raises an error because height is missing', 'height uses its default value of 1', 'width becomes 1 and height becomes 5', 'Python asks the user for height'],
+        options: [
+          'It raises an error because height is missing',
+          'height uses its default value of 1',
+          'width becomes 1 and height becomes 5',
+          'Python asks the user for height',
+        ],
         correctIndex: 1,
         explanation: 'height has a default value, so omitting it is allowed and 1 is used.',
       },
@@ -92,7 +103,8 @@ export const PYTHON_FUNCTIONS_LESSON: ReadingLesson = {
         question: 'After running the example, what is the value of the global count?',
         options: ['1', '10', '11', 'It raises UnboundLocalError'],
         correctIndex: 1,
-        explanation: 'The assignment inside bump creates a local variable; the global count stays 10.',
+        explanation:
+          'The assignment inside bump creates a local variable; the global count stays 10.',
       },
     },
     {
@@ -106,16 +118,24 @@ export const PYTHON_FUNCTIONS_LESSON: ReadingLesson = {
       code: 'def average(values):\n    if not values:\n        return None\n    return sum(values) / len(values)\n\naverage([2, 4, 6])  # 4.0\naverage([])         # None',
       question: {
         question: 'Which design keeps a function easiest to test?',
-        options: ['Read input and print output inside it', 'Change global variables it relies on', 'Take arguments and return a result', 'Avoid parameters and use globals'],
+        options: [
+          'Read input and print output inside it',
+          'Change global variables it relies on',
+          'Take arguments and return a result',
+          'Avoid parameters and use globals',
+        ],
         correctIndex: 2,
-        explanation: 'Pure functions that take arguments and return results are the simplest to test.',
+        explanation:
+          'Pure functions that take arguments and return results are the simplest to test.',
       },
     },
   ],
 };
 
 export function lessonText(lesson: ReadingLesson): string {
-  return lesson.sections.map((s) => [s.heading, ...s.paragraphs, s.code ?? ''].join('\n')).join('\n\n');
+  return lesson.sections
+    .map((s) => [s.heading, ...s.paragraphs, s.code ?? ''].join('\n'))
+    .join('\n\n');
 }
 
 export interface MediaLesson {
@@ -134,7 +154,8 @@ export const VIDEO_LESSON: MediaLesson = {
   title: 'Python Functions in Practice (video lesson)',
   src: '/lab/media/python-functions.webm',
   captions: '/lab/media/python-functions.vtt',
-  description: 'A short narrated slide lesson on defining functions, parameters, return values and scope in Python.',
+  description:
+    'A short narrated slide lesson on defining functions, parameters, return values and scope in Python.',
   skillHint: 'Python',
 };
 

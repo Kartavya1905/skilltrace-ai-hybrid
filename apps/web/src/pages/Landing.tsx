@@ -28,23 +28,35 @@ export function Landing() {
           <img src="/favicon.svg" alt="" className="h-8 w-8" />
           <span className="text-lg font-semibold">SkillTrace AI</span>
         </div>
-        <Link to={user ? '/app' : '/signin'} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+        <Link
+          to={user ? '/app' : '/signin'}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+        >
           {user ? 'Open dashboard' : 'Sign in'}
         </Link>
       </header>
       <main className="mx-auto max-w-6xl px-6">
         <section className="py-16 text-center">
           <p className="text-sm font-medium text-indigo-700">The evidence-backed Skill Passport</p>
-          <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">Show what you learned, how you learned it, and what you built.</h1>
+          <h1 className="mx-auto mt-3 max-w-3xl text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+            Show what you learned, how you learned it, and what you built.
+          </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
-            SkillTrace records your study on pages you choose, detects skills with on-device Gemini Nano through Firebase AI Logic (with a cloud model only when you
-            allow it), and turns real evidence into a shareable passport. Every claim shows exactly what supports it.
+            SkillTrace records your study on pages you choose, detects skills with on-device Gemini
+            Nano through Firebase AI Logic (with a cloud model only when you allow it), and turns
+            real evidence into a shareable passport. Every claim shows exactly what supports it.
           </p>
           <div className="mt-8 flex justify-center gap-3">
-            <Link to={user ? '/app' : '/signin'} className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700">
+            <Link
+              to={user ? '/app' : '/signin'}
+              className="rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+            >
               Get started
             </Link>
-            <a href="#how" className="rounded-lg px-5 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-white">
+            <a
+              href="#how"
+              className="rounded-lg px-5 py-3 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-white"
+            >
               How it works
             </a>
           </div>
@@ -52,7 +64,9 @@ export function Landing() {
         <section id="how" className="grid gap-4 pb-12 md:grid-cols-3">
           {PILLARS.map((p) => (
             <div key={p.title} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">{p.tag}</span>
+              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                {p.tag}
+              </span>
               <h2 className="mt-3 text-lg font-semibold">{p.title}</h2>
               <p className="mt-2 text-sm text-slate-600">{p.body}</p>
             </div>
@@ -62,8 +76,10 @@ export function Landing() {
           <div>
             <h2 className="text-xl font-semibold">Hybrid AI, private by default</h2>
             <p className="mt-2 text-sm text-slate-300">
-              Skill classification, topic extraction and engagement questions run on your device when Chrome's built-in model is available. If it isn't, you decide
-              whether a minimised request may go to the cloud. The app always shows which one actually ran, as reported by the Firebase SDK.
+              Skill classification, topic extraction and engagement questions run on your device
+              when Chrome's built-in model is available. If it isn't, you decide whether a minimised
+              request may go to the cloud. The app always shows which one actually ran, as reported
+              by the Firebase SDK.
             </p>
           </div>
           <ul className="space-y-2 text-sm text-slate-300">

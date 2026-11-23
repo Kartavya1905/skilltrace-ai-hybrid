@@ -20,7 +20,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-skilltrace \"vitest run --config tests/rules/vitest.config.ts\"",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-skilltrace \"npx vitest run --config tests/rules/vitest.config.ts\"",
     "test:e2e": "playwright test",
     "check:secrets": "node scripts/check-secrets.mjs",
     "media:generate": "node scripts/generate-lab-media.mjs",

@@ -4,12 +4,21 @@
  * the verified sender origin. The dashboard PULLS finished sessions, validates every event with zod,
  * reconstructs totals with the same tracking engine, stores them (idempotent ids), then ACKs.
  */
-import { SessionMetaSchema, validateEvents, type LearningEvent, type SessionMeta } from '@skilltrace/shared';
+import {
+  SessionMetaSchema,
+  validateEvents,
+  type LearningEvent,
+  type SessionMeta,
+} from '@skilltrace/shared';
 
 export const EXTENSION_ID_KEY = 'skilltrace:extension-id';
 
 interface ChromeRuntime {
-  sendMessage: (extensionId: string, message: unknown, callback: (response: unknown) => void) => void;
+  sendMessage: (
+    extensionId: string,
+    message: unknown,
+    callback: (response: unknown) => void,
+  ) => void;
   lastError?: { message?: string };
 }
 
@@ -32,7 +41,10 @@ export function setExtensionId(id: string) {
 function send<T>(message: unknown, timeoutMs = 4000): Promise<T> {
   const rt = runtime();
   const id = getExtensionId();
-  if (!rt || !id) return Promise.reject(new Error('Extension not reachable. Install it and open the dashboard from its popup.'));
+  if (!rt || !id)
+    return Promise.reject(
+      new Error('Extension not reachable. Install it and open the dashboard from its popup.'),
+    );
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Extension did not respond.')), timeoutMs);
     rt.sendMessage(id, message, (response) => {
@@ -62,13 +74,20 @@ export interface PulledSession {
 }
 
 export async function pullSessions(): Promise<PulledSession[]> {
-  const res = await send<{ sessions?: { meta: unknown; events: unknown[] }[] }>({ type: 'skilltrace.pull' }, 10_000);
+  const res = await send<{ sessions?: { meta: unknown; events: unknown[] }[] }>(
+    { type: 'skilltrace.pull' },
+    10_000,
+  );
   const out: PulledSession[] = [];
   for (const s of res.sessions ?? []) {
     const meta = SessionMetaSchema.safeParse(s.meta);
     if (!meta.success || !Array.isArray(s.events)) continue;
     const { accepted, rejected } = validateEvents(s.events);
-    out.push({ meta: meta.data, events: accepted.filter((e) => e.sessionId === meta.data.sessionId), rejected });
+    out.push({
+      meta: meta.data,
+      events: accepted.filter((e) => e.sessionId === meta.data.sessionId),
+      rejected,
+    });
   }
   return out;
 }

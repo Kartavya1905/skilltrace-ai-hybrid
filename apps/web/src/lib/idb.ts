@@ -22,12 +22,14 @@ export function openKV(name: string, stores: string[], version = 1): KV {
     (dbp ??= new Promise((resolve, reject) => {
       const open = indexedDB.open(name, version);
       open.onupgradeneeded = () => {
-        for (const s of stores) if (!open.result.objectStoreNames.contains(s)) open.result.createObjectStore(s);
+        for (const s of stores)
+          if (!open.result.objectStoreNames.contains(s)) open.result.createObjectStore(s);
       };
       open.onsuccess = () => resolve(open.result);
       open.onerror = () => reject(open.error);
     }));
-  const tx = async (store: string, mode: IDBTransactionMode) => (await db()).transaction(store, mode).objectStore(store);
+  const tx = async (store: string, mode: IDBTransactionMode) =>
+    (await db()).transaction(store, mode).objectStore(store);
   const done = (t: IDBObjectStore) =>
     new Promise<void>((resolve, reject) => {
       t.transaction.oncomplete = () => resolve();

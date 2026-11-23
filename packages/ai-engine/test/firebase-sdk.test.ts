@@ -15,7 +15,11 @@ let app: FirebaseApp | null = null;
 
 function makeApp() {
   app = initializeApp(
-    { apiKey: 'test-api-key-not-real', appId: '1:000000000000:web:0000000000000000', projectId: 'demo-skilltrace' },
+    {
+      apiKey: 'test-api-key-not-real',
+      appId: '1:000000000000:web:0000000000000000',
+      projectId: 'demo-skilltrace',
+    },
     `test-${Math.random()}`,
   );
   return app;
@@ -52,8 +56,15 @@ describe('firebase/ai SDK integration', () => {
   it('ONLY_ON_DEVICE without the Prompt API returns local_unavailable, never a result', async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
-    const svc = new HybridAIService(new FirebaseModelFactory(makeApp()), { consent: () => 'deny', isOnline: () => true });
-    const r = await svc.run('classify', { local: 'Classify: Python functions', cloud: '', cloudDataDescription: '' });
+    const svc = new HybridAIService(new FirebaseModelFactory(makeApp()), {
+      consent: () => 'deny',
+      isOnline: () => true,
+    });
+    const r = await svc.run('classify', {
+      local: 'Classify: Python functions',
+      cloud: '',
+      cloudDataDescription: '',
+    });
     expect(r.ok).toBe(false);
     expect(!r.ok && r.error.kind).toBe('local_unavailable');
     // Without our guard the real SDK would have sent this to the cloud (no LanguageModel global).
@@ -65,13 +76,22 @@ describe('firebase/ai SDK integration', () => {
       async () =>
         new Response(
           JSON.stringify({
-            candidates: [{ content: { role: 'model', parts: [{ text: JSON.stringify(classification) }] }, finishReason: 'STOP', index: 0 }],
+            candidates: [
+              {
+                content: { role: 'model', parts: [{ text: JSON.stringify(classification) }] },
+                finishReason: 'STOP',
+                index: 0,
+              },
+            ],
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } },
         ),
     );
     vi.stubGlobal('fetch', fetchSpy);
-    const svc = new HybridAIService(new FirebaseModelFactory(makeApp(), 'gemini-3.5-flash-lite'), { consent: () => 'allow', isOnline: () => true });
+    const svc = new HybridAIService(new FirebaseModelFactory(makeApp(), 'gemini-3.5-flash-lite'), {
+      consent: () => 'allow',
+      isOnline: () => true,
+    });
     const r = await svc.runWithMode('classify', 'only_in_cloud', 'Classify: Python functions');
     expect(fetchSpy).toHaveBeenCalledOnce();
     const url = String((fetchSpy.mock.calls[0] as unknown[])[0]);
@@ -84,9 +104,20 @@ describe('firebase/ai SDK integration', () => {
   it('surfaces HTTP 429 from the backend as rate_limited', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ error: { code: 429, message: 'Resource exhausted', status: 'RESOURCE_EXHAUSTED' } }), { status: 429 })),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              error: { code: 429, message: 'Resource exhausted', status: 'RESOURCE_EXHAUSTED' },
+            }),
+            { status: 429 },
+          ),
+      ),
     );
-    const svc = new HybridAIService(new FirebaseModelFactory(makeApp()), { consent: () => 'allow', isOnline: () => true });
+    const svc = new HybridAIService(new FirebaseModelFactory(makeApp()), {
+      consent: () => 'allow',
+      isOnline: () => true,
+    });
     const r = await svc.runWithMode('classify', 'only_in_cloud', 'x');
     expect(!r.ok && r.error.kind).toBe('rate_limited');
   });

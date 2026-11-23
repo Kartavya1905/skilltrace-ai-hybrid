@@ -3,7 +3,9 @@ import { matchPattern, originOf } from '../src/protocol';
 
 describe('extension origin handling', () => {
   it('only allows https pages, plus http on localhost for development', () => {
-    expect(originOf('https://docs.python.org/3/tutorial/?q=secret#x')).toBe('https://docs.python.org');
+    expect(originOf('https://docs.python.org/3/tutorial/?q=secret#x')).toBe(
+      'https://docs.python.org',
+    );
     expect(originOf('http://localhost:5310/lab/extension-demo.html')).toBe('http://localhost:5310');
     expect(originOf('http://example.com/page')).toBeNull();
     expect(originOf('chrome://extensions')).toBeNull();

@@ -3,7 +3,12 @@
  * the learner selected. Every claim carries its evidence types. No certification or verification
  * badge is produced unless a record genuinely has 'independently_verified' provenance.
  */
-import type { Provenance, PublicPassport, PublicProjectEvidence, PublicSkillEvidence } from '@skilltrace/shared';
+import type {
+  Provenance,
+  PublicPassport,
+  PublicProjectEvidence,
+  PublicSkillEvidence,
+} from '@skilltrace/shared';
 import { SCHEMA_VERSION } from '@skilltrace/shared';
 import type { AppData } from './app-context';
 import { projectHours, skillAssessments, skillTimelines } from './analytics';
@@ -30,18 +35,29 @@ export function buildPublicPassport(
   data: AppData,
   ownerUid: string,
   shareId: string,
-  profile: { displayName: string; headline: string; githubUrl: string; portfolioUrl: string; summary: string },
+  profile: {
+    displayName: string;
+    headline: string;
+    githubUrl: string;
+    portfolioUrl: string;
+    summary: string;
+  },
   opts: PassportOptions,
   now = new Date(),
 ): PublicPassport {
   const timelines = skillTimelines(data).filter((t) => opts.skills.includes(t.skill));
   const hours = projectHours(data);
-  const publicProjects = data.projects.filter((p) => opts.projectIds.includes(p.id) && p.confirmedByUser && p.status !== 'dismissed');
+  const publicProjects = data.projects.filter(
+    (p) => opts.projectIds.includes(p.id) && p.confirmedByUser && p.status !== 'dismissed',
+  );
 
   const skills: PublicSkillEvidence[] = timelines.map((t) => {
     const evidence = new Set<Provenance>();
-    const sessions = data.learning_sessions.filter((s) => s.attributions.some((a) => a.skill === t.skill));
-    for (const s of sessions) evidence.add(s.provenance === 'sample_data' ? 'sample_data' : 'auto_recorded');
+    const sessions = data.learning_sessions.filter((s) =>
+      s.attributions.some((a) => a.skill === t.skill),
+    );
+    for (const s of sessions)
+      evidence.add(s.provenance === 'sample_data' ? 'sample_data' : 'auto_recorded');
     const assessments = opts.showAssessments ? skillAssessments(data, t.skill) : [];
     if (assessments.length) evidence.add('assessment_result');
     const linked = publicProjects.filter((p) => p.skillNames.includes(t.skill));
@@ -78,7 +94,8 @@ export function buildPublicPassport(
     const workMs = hours.get(p.id) ?? 0;
     if (workMs > 0) evidence.add('self_reported');
     // Label each milestone by its own provenance: only API-fetched ones are "GitHub metadata".
-    if (p.githubUrl || milestones.some((m) => m.provenance === 'github_metadata')) evidence.add('github_metadata');
+    if (p.githubUrl || milestones.some((m) => m.provenance === 'github_metadata'))
+      evidence.add('github_metadata');
     if (milestones.some((m) => m.provenance === 'self_reported')) evidence.add('self_reported');
     if (p.provenance === 'sample_data') evidence.add('sample_data');
     return {
@@ -91,7 +108,11 @@ export function buildPublicPassport(
       milestones: milestones
         .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
         .slice(-10)
-        .map((m) => ({ title: m.title, kind: m.kind, date: opts.showTimestamps ? m.occurredAt : null })),
+        .map((m) => ({
+          title: m.title,
+          kind: m.kind,
+          date: opts.showTimestamps ? m.occurredAt : null,
+        })),
       evidenceLinks: p.evidenceLinks.slice(0, 5),
       evidence: [...evidence],
     };

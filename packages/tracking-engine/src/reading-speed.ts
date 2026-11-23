@@ -48,7 +48,9 @@ export function estimateReadingSpeed(
   observedCredibleWpm: readonly number[],
   options: ReadingSpeedOptions = DEFAULT_SPEED_OPTIONS,
 ): SpeedEstimate {
-  const recent = observedCredibleWpm.filter((x) => Number.isFinite(x) && x > 0).slice(-options.window);
+  const recent = observedCredibleWpm
+    .filter((x) => Number.isFinite(x) && x > 0)
+    .slice(-options.window);
   if (recent.length < options.minSessions) {
     return { wpm: options.baselineWpm, personalised: false, sessionsUsed: 0, excludedOutliers: 0 };
   }

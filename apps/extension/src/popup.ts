@@ -14,7 +14,10 @@ async function render() {
   $('site').textContent = origin ?? 'not trackable';
   const allow = $<HTMLButtonElement>('allow');
   allow.disabled = !origin || s.origins.includes(origin) || !s.trackingEnabled;
-  allow.textContent = origin && s.origins.includes(origin) ? 'Tracking allowed on this site' : 'Allow tracking on this site';
+  allow.textContent =
+    origin && s.origins.includes(origin)
+      ? 'Tracking allowed on this site'
+      : 'Allow tracking on this site';
   allow.onclick = async () => {
     if (!origin) return;
     // Chrome shows its own permission prompt for exactly this site.
@@ -45,7 +48,9 @@ async function render() {
   const { pending } = await send<{ pending: number }>({ type: 'pendingCount' });
   $('pending').textContent = String(pending);
   $('extid').textContent = chrome.runtime.id;
-  const dashboards = (await (await fetch(chrome.runtime.getURL('dashboard-origins.json'))).json()) as string[];
+  const dashboards = (await (
+    await fetch(chrome.runtime.getURL('dashboard-origins.json'))
+  ).json()) as string[];
   $('dashboards').innerHTML = '';
   for (const d of dashboards) {
     const a = document.createElement('a');
@@ -63,7 +68,10 @@ for (const [id, key] of [
   ['demo', 'demoMode'],
 ] as const) {
   $<HTMLInputElement>(id).addEventListener('change', async (e) => {
-    await send({ type: 'updateSettings', patch: { [key]: (e.target as HTMLInputElement).checked } as Partial<ExtensionSettings> });
+    await send({
+      type: 'updateSettings',
+      patch: { [key]: (e.target as HTMLInputElement).checked } as Partial<ExtensionSettings>,
+    });
     void render();
   });
 }

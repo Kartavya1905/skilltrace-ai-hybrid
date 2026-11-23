@@ -34,7 +34,10 @@ export default function MediaLab({ kind }: { kind: 'video' | 'audio' }) {
       title: lesson.title,
       contentType: kind,
       wordCount: 0,
-      durationSec: mediaRef.current && Number.isFinite(mediaRef.current.duration) ? mediaRef.current.duration : 0,
+      durationSec:
+        mediaRef.current && Number.isFinite(mediaRef.current.duration)
+          ? mediaRef.current.duration
+          : 0,
       // Permitted excerpt: the lesson's own transcript (first-party content).
       excerpt: `${lesson.description}\n${transcript}`.slice(0, 1500),
       sections: [],
@@ -77,11 +80,21 @@ export default function MediaLab({ kind }: { kind: 'video' | 'audio' }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div>
-        <PageHeader title={lesson.title} subtitle={`${kind === 'video' ? 'Video' : 'Audio'} lesson · first-party Learning Lab · original content generated for this project`} />
+        <PageHeader
+          title={lesson.title}
+          subtitle={`${kind === 'video' ? 'Video' : 'Audio'} lesson · first-party Learning Lab · original content generated for this project`}
+        />
         <TrackingGate />
         <Card>
           {kind === 'video' ? (
-            <video ref={mediaRef} controls preload="metadata" className="aspect-video w-full rounded-lg bg-black" onError={() => setMediaError('missing')} crossOrigin="anonymous">
+            <video
+              ref={mediaRef}
+              controls
+              preload="metadata"
+              className="aspect-video w-full rounded-lg bg-black"
+              onError={() => setMediaError('missing')}
+              crossOrigin="anonymous"
+            >
               <source src={lesson.src} type="video/webm" />
               <track kind="captions" src={lesson.captions} srcLang="en" label="English" default />
             </video>
@@ -91,23 +104,33 @@ export default function MediaLab({ kind }: { kind: 'video' | 'audio' }) {
                 <div className="text-xs uppercase tracking-wide opacity-80">Audio lesson</div>
                 <div className="text-lg font-semibold">{lesson.title}</div>
               </div>
-              <audio ref={mediaRef} controls preload="metadata" className="w-full" onError={() => setMediaError('missing')}>
+              <audio
+                ref={mediaRef}
+                controls
+                preload="metadata"
+                className="w-full"
+                onError={() => setMediaError('missing')}
+              >
                 <source src={lesson.src} type="audio/webm" />
               </audio>
             </div>
           )}
           {mediaError && (
             <p role="alert" className="mt-3 text-sm text-rose-700">
-              The lesson media could not be loaded. Generate it with <code>pnpm media:generate</code> (see docs/deployment.md).
+              The lesson media could not be loaded. Generate it with{' '}
+              <code>pnpm media:generate</code> (see docs/deployment.md).
             </p>
           )}
           <div className="mt-4 space-y-1">
-            <div className="text-xs text-slate-500">Unique coverage (green = played at least once)</div>
+            <div className="text-xs text-slate-500">
+              Unique coverage (green = played at least once)
+            </div>
             <CoverageStrip ranges={ranges} duration={Number.isFinite(duration) ? duration : 0} />
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Try it: watch a minute, rewind 30 seconds and watch again (active and revision time grow, coverage does not), skip ahead (skipped content is not counted),
-            or play at 2× (credit uses real elapsed time).{' '}
+            Try it: watch a minute, rewind 30 seconds and watch again (active and revision time
+            grow, coverage does not), skip ahead (skipped content is not counted), or play at 2×
+            (credit uses real elapsed time).{' '}
             {kind === 'video'
               ? `Video playback in a hidden tab is ${prefs.creditHiddenVideo ? 'credited' : 'not credited'} (Settings).`
               : 'Audio keeps counting in a background tab.'}
@@ -129,7 +152,8 @@ export default function MediaLab({ kind }: { kind: 'video' | 'audio' }) {
           <LiveStats summary={lab.summary} kind={kind} />
           {kind === 'video' && (
             <p className="mt-3 text-xs text-slate-500">
-              Presence checks every {prefs.demoMode ? '20–45 seconds (DEMO mode)' : '5–90 minutes'} of playback; {Math.round(30 * prefs.responseWindowMultiplier)} s to respond.
+              Presence checks every {prefs.demoMode ? '20–45 seconds (DEMO mode)' : '5–90 minutes'}{' '}
+              of playback; {Math.round(30 * prefs.responseWindowMultiplier)} s to respond.
             </p>
           )}
           <div className="mt-4">
@@ -157,13 +181,21 @@ export default function MediaLab({ kind }: { kind: 'video' | 'audio' }) {
         </Card>
         {finished === 'discarded' && (
           <Card title="Not saved">
-            <p className="text-sm text-slate-700">The session was too short to record (under 5 seconds with no credited time).</p>
+            <p className="text-sm text-slate-700">
+              The session was too short to record (under 5 seconds with no credited time).
+            </p>
           </Card>
         )}
         {finished && finished !== 'discarded' && (
           <Card title="Saved">
             <p className="text-sm text-slate-700">
-              Saved. Skill detection {ai ? 'is running through Firebase AI Logic' : 'is queued until AI is configured'}. See <Link className="text-indigo-700 underline" to="/app/sessions">Sessions</Link>.
+              Saved. Skill detection{' '}
+              {ai ? 'is running through Firebase AI Logic' : 'is queued until AI is configured'}.
+              See{' '}
+              <Link className="text-indigo-700 underline" to="/app/sessions">
+                Sessions
+              </Link>
+              .
             </p>
           </Card>
         )}

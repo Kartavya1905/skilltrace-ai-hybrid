@@ -14,22 +14,32 @@ export default function Skills() {
         subtitle="Attributed time splits each session between the skills it covers, so totals across skills add up to unique time. Shared time shows the overlap explicitly."
       />
       {timelines.length === 0 ? (
-        <EmptyState title="No skills detected yet">Skills appear after a recorded session is classified by Firebase AI Logic or corrected by you.</EmptyState>
+        <EmptyState title="No skills detected yet">
+          Skills appear after a recorded session is classified by Firebase AI Logic or corrected by
+          you.
+        </EmptyState>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {timelines.map((t) => {
-            const projects = data.projects.filter((p) => p.confirmedByUser && p.skillNames.includes(t.skill));
+            const projects = data.projects.filter(
+              (p) => p.confirmedByUser && p.skillNames.includes(t.skill),
+            );
             const assessments = data.assessments.filter((a) => a.skill === t.skill);
             return (
               <Card key={t.skill}>
                 <div className="flex items-start justify-between">
-                  <Link to={`/app/skills/${encodeURIComponent(t.skill)}`} className="text-lg font-semibold text-slate-900 hover:underline">
+                  <Link
+                    to={`/app/skills/${encodeURIComponent(t.skill)}`}
+                    className="text-lg font-semibold text-slate-900 hover:underline"
+                  >
                     {t.skill}
                   </Link>
                   <Badge tone="indigo">{formatDuration(t.attributedMs)}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  First studied {t.firstStudiedAt ? new Date(t.firstStudiedAt).toLocaleDateString() : '—'} · last {t.lastStudiedAt ? new Date(t.lastStudiedAt).toLocaleDateString() : '—'}
+                  First studied{' '}
+                  {t.firstStudiedAt ? new Date(t.firstStudiedAt).toLocaleDateString() : '—'} · last{' '}
+                  {t.lastStudiedAt ? new Date(t.lastStudiedAt).toLocaleDateString() : '—'}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1">
                   {t.topics.slice(0, 8).map((x) => (

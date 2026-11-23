@@ -26,19 +26,39 @@ export function applyTimer(state: TimerState, action: TimerAction): TimerState {
     case 'start':
     case 'resume':
       if (state.running) return state;
-      return { ...state, running: true, startedAt: state.startedAt ?? action.t, lastStart: action.t };
+      return {
+        ...state,
+        running: true,
+        startedAt: state.startedAt ?? action.t,
+        lastStart: action.t,
+      };
     case 'pause':
       if (!state.running || state.lastStart === null) return state;
-      return { ...state, running: false, lastStart: null, accumulatedMs: state.accumulatedMs + Math.max(0, action.t - state.lastStart) };
+      return {
+        ...state,
+        running: false,
+        lastStart: null,
+        accumulatedMs: state.accumulatedMs + Math.max(0, action.t - state.lastStart),
+      };
     case 'stop': {
-      const extra = state.running && state.lastStart !== null ? Math.max(0, action.t - state.lastStart) : 0;
-      return { ...state, running: false, lastStart: null, accumulatedMs: state.accumulatedMs + extra, stopped: true };
+      const extra =
+        state.running && state.lastStart !== null ? Math.max(0, action.t - state.lastStart) : 0;
+      return {
+        ...state,
+        running: false,
+        lastStart: null,
+        accumulatedMs: state.accumulatedMs + extra,
+        stopped: true,
+      };
     }
   }
 }
 
 export function timerElapsed(state: TimerState, now: number): number {
-  return state.accumulatedMs + (state.running && state.lastStart !== null ? Math.max(0, now - state.lastStart) : 0);
+  return (
+    state.accumulatedMs +
+    (state.running && state.lastStart !== null ? Math.max(0, now - state.lastStart) : 0)
+  );
 }
 
 export interface WorkSessionLike {
@@ -61,12 +81,17 @@ export function projectTimeByProject(sessions: readonly WorkSessionLike[]): Map<
 }
 
 /** Validate a manual session entry; returns an error message or null. */
-export function validateManualSession(startIso: string, endIso: string, now = Date.now()): string | null {
+export function validateManualSession(
+  startIso: string,
+  endIso: string,
+  now = Date.now(),
+): string | null {
   const s = Date.parse(startIso);
   const e = Date.parse(endIso);
   if (Number.isNaN(s) || Number.isNaN(e)) return 'Start and end must be valid dates.';
   if (e <= s) return 'End must be after start.';
   if (e > now + 60_000) return 'Sessions cannot end in the future.';
-  if (e - s > 16 * 3_600_000) return 'A single session cannot exceed 16 hours. Split it into several sessions.';
+  if (e - s > 16 * 3_600_000)
+    return 'A single session cannot exceed 16 hours. Split it into several sessions.';
   return null;
 }

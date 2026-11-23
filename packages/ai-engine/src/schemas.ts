@@ -27,13 +27,19 @@ export const QuestionZ = z.object({
 });
 export type EngagementQuestion = z.infer<typeof QuestionZ>;
 
-export const SummaryZ = z.object({ summary: z.string().max(800), keyPoints: z.array(z.string().max(200)).max(6) });
+export const SummaryZ = z.object({
+  summary: z.string().max(800),
+  keyPoints: z.array(z.string().max(200)).max(6),
+});
 export type SessionSummary = z.infer<typeof SummaryZ>;
 
 export const ExplanationZ = z.object({ explanation: z.string().max(900) });
 export type EvidenceExplanation = z.infer<typeof ExplanationZ>;
 
-export const PassportSummaryZ = z.object({ headline: z.string().max(140), summary: z.string().max(900) });
+export const PassportSummaryZ = z.object({
+  headline: z.string().max(140),
+  summary: z.string().max(900),
+});
 export type PassportSummary = z.infer<typeof PassportSummaryZ>;
 
 export const RepoSkillsZ = z.object({
@@ -53,10 +59,20 @@ export const JSON_SCHEMAS = {
       primarySkill: str,
       secondarySkills: strArr(5),
       topics: strArr(12),
-      contentKind: { type: 'string', enum: ['tutorial', 'reference', 'lecture', 'exercise', 'other'] },
+      contentKind: {
+        type: 'string',
+        enum: ['tutorial', 'reference', 'lecture', 'exercise', 'other'],
+      },
       confidence: { type: 'number' },
     },
-    required: ['isLearningContent', 'primarySkill', 'secondarySkills', 'topics', 'contentKind', 'confidence'],
+    required: [
+      'isLearningContent',
+      'primarySkill',
+      'secondarySkills',
+      'topics',
+      'contentKind',
+      'confidence',
+    ],
   },
   topics: { type: 'object', properties: { topics: strArr(15) }, required: ['topics'] },
   question: {
@@ -69,16 +85,28 @@ export const JSON_SCHEMAS = {
     },
     required: ['question', 'options', 'correctIndex', 'explanation'],
   },
-  summary: { type: 'object', properties: { summary: str, keyPoints: strArr(6) }, required: ['summary', 'keyPoints'] },
+  summary: {
+    type: 'object',
+    properties: { summary: str, keyPoints: strArr(6) },
+    required: ['summary', 'keyPoints'],
+  },
   explain: { type: 'object', properties: { explanation: str }, required: ['explanation'] },
-  passport: { type: 'object', properties: { headline: str, summary: str }, required: ['headline', 'summary'] },
+  passport: {
+    type: 'object',
+    properties: { headline: str, summary: str },
+    required: ['headline', 'summary'],
+  },
   repoSkills: {
     type: 'object',
     properties: {
       skills: {
         type: 'array',
         maxItems: 8,
-        items: { type: 'object', properties: { skill: str, reason: str }, required: ['skill', 'reason'] },
+        items: {
+          type: 'object',
+          properties: { skill: str, reason: str },
+          required: ['skill', 'reason'],
+        },
       },
     },
     required: ['skills'],

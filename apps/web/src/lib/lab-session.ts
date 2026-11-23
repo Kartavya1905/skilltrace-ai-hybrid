@@ -7,7 +7,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LearningEvent, SessionMeta } from '@skilltrace/shared';
 import { randomId } from '@skilltrace/shared';
-import { TrackedSession, reconstructSession, type CheckRequest, type SessionResult, type TrackingOptions } from '@skilltrace/tracking-engine';
+import {
+  TrackedSession,
+  reconstructSession,
+  type CheckRequest,
+  type SessionResult,
+  type TrackingOptions,
+} from '@skilltrace/tracking-engine';
 import { openKV } from './idb';
 import { saveSession } from './actions';
 import type { DataStore } from './store';
@@ -110,7 +116,8 @@ export function useLabSession(
     // recoverLabSessions() rebuilds the summary on the next visit.
     return () => {
       clearInterval(timer);
-      if (!finishedRef.current) void finalizeSession(store, meta, eventsRef.current, optsRef.current);
+      if (!finishedRef.current)
+        void finalizeSession(store, meta, eventsRef.current, optsRef.current);
       setSession(null);
     };
   }, [enabled, store, nonce, stopped]);
@@ -158,7 +165,12 @@ async function discard(meta: SessionMeta, events: LearningEvent[]) {
   for (const e of events) await labKV.delete('events', e.id);
 }
 
-async function finalizeSession(store: DataStore, meta: SessionMeta, events: LearningEvent[], opts: TrackingOptions): Promise<SessionResult | null> {
+async function finalizeSession(
+  store: DataStore,
+  meta: SessionMeta,
+  events: LearningEvent[],
+  opts: TrackingOptions,
+): Promise<SessionResult | null> {
   if (events.length < 2) {
     await discard(meta, events);
     return null;

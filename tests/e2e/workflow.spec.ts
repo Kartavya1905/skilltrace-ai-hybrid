@@ -22,7 +22,13 @@ async function onboard(page: Page) {
 }
 
 const statValue = async (page: Page, label: string) =>
-  (await page.locator('dt', { hasText: label }).first().locator('xpath=following-sibling::dd[1]').innerText()).trim();
+  (
+    await page
+      .locator('dt', { hasText: label })
+      .first()
+      .locator('xpath=following-sibling::dd[1]')
+      .innerText()
+  ).trim();
 
 function mockGithub(page: Page) {
   const repo = {
@@ -38,11 +44,22 @@ function mockGithub(page: Page) {
   };
   return page.route('https://api.github.com/**', (route) => {
     const url = route.request().url();
-    const json = (body: unknown) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    const json = (body: unknown) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
     if (url.endsWith('/repos/demo-user/grades-api')) return json(repo);
     if (url.endsWith('/languages')) return json({ Python: 12000, Dockerfile: 300 });
-    if (url.endsWith('/readme')) return json({ content: btoa('# Grades API\nBuilt with FastAPI and SQLite. REST API endpoints.') });
-    if (url.includes('/commits')) return json([{ sha: 'abc1234def', html_url: `${repo.html_url}/commit/abc1234`, commit: { message: 'Add grades endpoint', author: { date: '2026-11-19T10:00:00Z' } } }]);
+    if (url.endsWith('/readme'))
+      return json({
+        content: btoa('# Grades API\nBuilt with FastAPI and SQLite. REST API endpoints.'),
+      });
+    if (url.includes('/commits'))
+      return json([
+        {
+          sha: 'abc1234def',
+          html_url: `${repo.html_url}/commit/abc1234`,
+          commit: { message: 'Add grades endpoint', author: { date: '2026-11-19T10:00:00Z' } },
+        },
+      ]);
     return route.fulfill({ status: 404, body: '{}' });
   });
 }
@@ -88,14 +105,22 @@ test('learner goes from study to a published, evidence-backed passport', async (
     ['py4', 'Line 1: missing colon after the parameter list'],
     ['py5', '1'],
   ]) {
-    await page.locator(`input[name="${q}"]`).locator('xpath=..').filter({ hasText: new RegExp(`^${answer.replace(/[()]/g, '\\$&')}$`) }).locator('input').check();
+    await page
+      .locator(`input[name="${q}"]`)
+      .locator('xpath=..')
+      .filter({ hasText: new RegExp(`^${answer.replace(/[()]/g, '\\$&')}$`) })
+      .locator('input')
+      .check();
   }
   await page.getByRole('button', { name: 'Submit for grading' }).click();
   await expect(page.getByText('Score: 5/5')).toBeVisible();
 
   // Learning hours before importing a project.
   await page.goto('/app');
-  const learningBefore = await page.locator('text=Eligible learning (all time)').locator('xpath=following-sibling::div[1]').innerText();
+  const learningBefore = await page
+    .locator('text=Eligible learning (all time)')
+    .locator('xpath=following-sibling::div[1]')
+    .innerText();
 
   // 4. GitHub import (mocked public API) -> suggested project -> confirm.
   await mockGithub(page);
@@ -105,8 +130,12 @@ test('learner goes from study to a published, evidence-backed passport', async (
   await expect(page.getByText(/Imported demo-user\/grades-api/)).toBeVisible();
   await page.goto('/app');
   await expect(page.getByText('New relevant project detected')).toBeVisible();
-  await expect(page.locator('text=Eligible learning (all time)').locator('xpath=following-sibling::div[1]')).toHaveText(learningBefore);
-  await expect(page.locator('text=Project work').locator('xpath=following-sibling::div[1]')).toHaveText('0.0 h');
+  await expect(
+    page.locator('text=Eligible learning (all time)').locator('xpath=following-sibling::div[1]'),
+  ).toHaveText(learningBefore);
+  await expect(
+    page.locator('text=Project work').locator('xpath=following-sibling::div[1]'),
+  ).toHaveText('0.0 h');
 
   await page.goto('/app/projects');
   await page.getByRole('button', { name: 'Review' }).click();
@@ -124,8 +153,12 @@ test('learner goes from study to a published, evidence-backed passport', async (
   await page.getByRole('button', { name: 'Add session' }).click();
   await expect(page.getByText('2.0 h')).toBeVisible();
   await page.goto('/app');
-  await expect(page.locator('text=Project work').locator('xpath=following-sibling::div[1]')).toHaveText('2.0 h');
-  await expect(page.locator('text=Eligible learning (all time)').locator('xpath=following-sibling::div[1]')).toHaveText(learningBefore);
+  await expect(
+    page.locator('text=Project work').locator('xpath=following-sibling::div[1]'),
+  ).toHaveText('2.0 h');
+  await expect(
+    page.locator('text=Eligible learning (all time)').locator('xpath=following-sibling::div[1]'),
+  ).toHaveText(learningBefore);
 
   // 6. Passport: choose what is public, publish, open the recruiter view.
   await page.goto('/app/passport');

@@ -7,7 +7,11 @@ export default defineConfig({
         test: {
           name: 'core',
           environment: 'node',
-          include: ['packages/*/test/**/*.test.ts', 'tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+          include: [
+            'packages/*/test/**/*.test.ts',
+            'tests/unit/**/*.test.ts',
+            'tests/integration/**/*.test.ts',
+          ],
         },
       },
       {

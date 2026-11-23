@@ -1,11 +1,25 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { onAuthStateChanged, signOut as fbSignOut } from 'firebase/auth';
 import type { CollectionTypes, PrivateCollection } from '@skilltrace/shared';
 import { HybridAIService, SkillTraceAI, type AIResult, type TaskName } from '@skilltrace/ai-engine';
 import { FirebaseModelFactory } from '@skilltrace/ai-engine/firebase';
 import { getFirebase } from './firebase';
 import { FirestoreStore, LIVE_COLLECTIONS, LocalStore, type DataStore } from './store';
-import { defaultPassportProfile, defaultPreferences, defaultProfile, defaultShareSettings } from './defaults';
+import {
+  defaultPassportProfile,
+  defaultPreferences,
+  defaultProfile,
+  defaultShareSettings,
+} from './defaults';
 import { recordInference } from './actions';
 
 export type AppData = { [C in PrivateCollection]: CollectionTypes[C][] };
@@ -48,12 +62,19 @@ export interface AppContextValue {
 
 const Ctx = createContext<AppContextValue | null>(null);
 const LOCAL_FLAG = 'skilltrace:local-mode';
-const LOCAL_USER: SessionUser = { uid: 'local-demo-user', displayName: 'Local demo learner', email: '', isLocal: true };
+const LOCAL_USER: SessionUser = {
+  uid: 'local-demo-user',
+  displayName: 'Local demo learner',
+  email: '',
+  isLocal: true,
+};
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const fb = getFirebase();
   const [authReady, setAuthReady] = useState(!fb);
-  const [user, setUser] = useState<SessionUser | null>(() => (localStorage.getItem(LOCAL_FLAG) === '1' ? LOCAL_USER : null));
+  const [user, setUser] = useState<SessionUser | null>(() =>
+    localStorage.getItem(LOCAL_FLAG) === '1' ? LOCAL_USER : null,
+  );
   const [data, setData] = useState<AppData>(emptyData);
   const [loaded, setLoaded] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
@@ -62,7 +83,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!fb) return;
     return onAuthStateChanged(fb.auth, (u) => {
-      if (u) setUser({ uid: u.uid, displayName: u.displayName ?? '', email: u.email ?? '', isLocal: false });
+      if (u)
+        setUser({
+          uid: u.uid,
+          displayName: u.displayName ?? '',
+          email: u.email ?? '',
+          isLocal: false,
+        });
       else setUser(localStorage.getItem(LOCAL_FLAG) === '1' ? LOCAL_USER : null);
       setAuthReady(true);
     });
@@ -121,7 +148,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const ai = useMemo(() => {
     // Firebase AI Logic needs the Firebase app + App Check, not a signed-in user.
     if (!fb || !user) return null;
-    const factory = new FirebaseModelFactory(fb.app, import.meta.env.VITE_AI_CLOUD_MODEL || undefined);
+    const factory = new FirebaseModelFactory(
+      fb.app,
+      import.meta.env.VITE_AI_CLOUD_MODEL || undefined,
+    );
     const service = new HybridAIService(factory, {
       consent: () => prefsRef.current.cloudAIConsent,
       requestCloudConsent,

@@ -12,7 +12,8 @@
 import type { EngagementEvent, Interval, MediaEvent } from '@skilltrace/shared';
 import { mergeIntervals, unionLength } from '@skilltrace/shared';
 
-export type SegmentStatus = 'eligible' | 'pending_verification' | 'unverified' | 'hidden' | 'discontinuity';
+export type SegmentStatus =
+  'eligible' | 'pending_verification' | 'unverified' | 'hidden' | 'discontinuity';
 
 export interface PlaybackSegment {
   /** Wall-clock span (epoch ms) during which the media was playing. */
@@ -213,7 +214,8 @@ export class PlaybackTracker {
   windowCreditedMs(t: number): number {
     let ms = 0;
     for (const seg of this.s.segments)
-      if (seg.windowId === this.s.windowId && seg.status === 'pending_verification') ms += seg.creditedMs;
+      if (seg.windowId === this.s.windowId && seg.status === 'pending_verification')
+        ms += seg.creditedMs;
     if (this.s.playing && this.s.anchor && this.currentStatus() === 'pending_verification')
       ms += Math.max(0, t - this.s.anchor.t);
     return ms;
@@ -221,7 +223,8 @@ export class PlaybackTracker {
 
   /** Live mode: should the host show a verification prompt now? */
   isCheckDue(t: number): boolean {
-    if (!this.config.verification || this.s.pendingCheck || this.s.suspended || !this.s.playing) return false;
+    if (!this.config.verification || this.s.pendingCheck || this.s.suspended || !this.s.playing)
+      return false;
     return this.windowCreditedMs(t) >= this.s.windowThresholdMs;
   }
 
@@ -234,7 +237,8 @@ export class PlaybackTracker {
 
   private passWindow(): void {
     for (const seg of this.s.segments)
-      if (seg.windowId === this.s.windowId && seg.status === 'pending_verification') seg.status = 'eligible';
+      if (seg.windowId === this.s.windowId && seg.status === 'pending_verification')
+        seg.status = 'eligible';
     this.s.checksPassed += this.s.pendingCheck ? 1 : 0;
     this.s.pendingCheck = null;
     this.s.suspended = false;
@@ -244,7 +248,8 @@ export class PlaybackTracker {
 
   private failWindow(): void {
     for (const seg of this.s.segments)
-      if (seg.windowId === this.s.windowId && seg.status === 'pending_verification') seg.status = 'unverified';
+      if (seg.windowId === this.s.windowId && seg.status === 'pending_verification')
+        seg.status = 'unverified';
     this.s.checksMissed += 1;
     this.s.pendingCheck = null;
     this.s.suspended = true;
@@ -357,7 +362,8 @@ export class PlaybackTracker {
   finalize(): void {
     if (this.s.pendingCheck) this.failWindow();
     // Pending segments from a window with no check yet (threshold not reached) stay creditable.
-    for (const seg of this.s.segments) if (seg.status === 'pending_verification') seg.status = 'eligible';
+    for (const seg of this.s.segments)
+      if (seg.status === 'pending_verification') seg.status = 'eligible';
     this.s.playing = false;
     this.s.anchor = null;
   }
@@ -397,7 +403,8 @@ export class PlaybackTracker {
       unverifiedMs: Math.round(unverifiedMs),
       hiddenMs: Math.round(hiddenMs),
       revisionMs: Math.round(revisionMs),
-      pausedMs: this.s.pausedMs + (this.s.pausedSince !== null ? this.s.lastT - this.s.pausedSince : 0),
+      pausedMs:
+        this.s.pausedMs + (this.s.pausedSince !== null ? this.s.lastT - this.s.pausedSince : 0),
       coverageSec,
       coverageRatio: this.s.duration > 0 ? Math.min(1, coverageSec / this.s.duration) : 0,
       coveredRanges,

@@ -31,7 +31,15 @@ const README_KEYWORDS: [RegExp, string][] = [
   [/\bpandas|numpy\b/i, 'Data Analysis'],
 ];
 
-const LANGUAGE_IGNORE = new Set(['Shell', 'Makefile', 'Dockerfile', 'Batchfile', 'PowerShell', 'Procfile', 'Jinja']);
+const LANGUAGE_IGNORE = new Set([
+  'Shell',
+  'Makefile',
+  'Dockerfile',
+  'Batchfile',
+  'PowerShell',
+  'Procfile',
+  'Jinja',
+]);
 
 export interface SkillHint {
   skill: string;
@@ -55,21 +63,31 @@ export function skillHintsFromRepo(repo: RepoMetadata): SkillHint[] {
   for (const [re, skill] of README_KEYWORDS) {
     if (!hints.has(skill) && re.test(text)) hints.set(skill, 'Mentioned in description or README');
   }
-  if ((hints.has('FastAPI') || hints.has('REST APIs') || hints.has('Node.js')) && !hints.has('Backend Development')) {
+  if (
+    (hints.has('FastAPI') || hints.has('REST APIs') || hints.has('Node.js')) &&
+    !hints.has('Backend Development')
+  ) {
     hints.set('Backend Development', 'Uses a backend framework or API');
   }
   return [...hints.entries()].map(([skill, reason]) => ({ skill, reason }));
 }
 
 /** Rank discovered repos by relevance to skills the learner is studying. */
-export function repoRelevance(hints: readonly SkillHint[], learnerSkills: readonly string[]): number {
+export function repoRelevance(
+  hints: readonly SkillHint[],
+  learnerSkills: readonly string[],
+): number {
   const set = new Set(learnerSkills);
   return hints.reduce((score, h) => score + (set.has(h.skill) ? 1 : 0), 0);
 }
 
 /** Parse a public GitHub repository URL into owner/name; null when not a repo URL. */
 export function parseRepoUrl(url: string): { owner: string; repo: string } | null {
-  const m = url.trim().match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100}?)(?:\.git)?\/?(?:[#?].*)?$/);
+  const m = url
+    .trim()
+    .match(
+      /^(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100}?)(?:\.git)?\/?(?:[#?].*)?$/,
+    );
   if (!m) return null;
   return { owner: m[1]!, repo: m[2]! };
 }

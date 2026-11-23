@@ -37,7 +37,11 @@ export default function ReadingLab() {
       wordCount: countWords(text),
       durationSec: 0,
       excerpt: text.slice(0, 1500),
-      sections: LESSON.sections.map((s) => ({ id: s.id, heading: s.heading, words: countWords([s.heading, ...s.paragraphs, s.code ?? ''].join(' ')) })),
+      sections: LESSON.sections.map((s) => ({
+        id: s.id,
+        heading: s.heading,
+        words: countWords([s.heading, ...s.paragraphs, s.code ?? ''].join(' ')),
+      })),
       startedAt: Date.now(),
       device: 'learning_lab',
     }),
@@ -87,9 +91,18 @@ export default function ReadingLab() {
     if (!ai) return;
     let cancelled = false;
     void ai.service
-      .runWithMode<EngagementQuestion>('question', 'only_on_device', questionPrompt({ skill: 'Python', sectionHeading: section.heading, sectionText: section.paragraphs.join('\n') }))
+      .runWithMode<EngagementQuestion>(
+        'question',
+        'only_on_device',
+        questionPrompt({
+          skill: 'Python',
+          sectionHeading: section.heading,
+          sectionText: section.paragraphs.join('\n'),
+        }),
+      )
       .then((r) => {
-        if (!cancelled && r.ok && r.output.correctIndex < r.output.options.length) setQuestion({ ...r.output, source: r.source });
+        if (!cancelled && r.ok && r.output.correctIndex < r.output.options.length)
+          setQuestion({ ...r.output, source: r.source });
       });
     return () => {
       cancelled = true;
@@ -102,12 +115,23 @@ export default function ReadingLab() {
         <PageHeader title={LESSON.title} subtitle="Reading lesson · first-party Learning Lab" />
         <TrackingGate />
         {lab.pageResetNotice && (
-          <div role="alert" className="mb-4 rounded-xl bg-rose-50 p-4 text-sm text-rose-900 ring-1 ring-rose-200">
-            Five questions in a row were missed, so credited time for <strong>this page only</strong> was reset. Your raw activity log is kept, other pages and skills are
-            unchanged, and you can review or dispute the checks on the <Link to="/app/engagement" className="underline">Engagement checks</Link> page.
+          <div
+            role="alert"
+            className="mb-4 rounded-xl bg-rose-50 p-4 text-sm text-rose-900 ring-1 ring-rose-200"
+          >
+            Five questions in a row were missed, so credited time for{' '}
+            <strong>this page only</strong> was reset. Your raw activity log is kept, other pages
+            and skills are unchanged, and you can review or dispute the checks on the{' '}
+            <Link to="/app/engagement" className="underline">
+              Engagement checks
+            </Link>{' '}
+            page.
           </div>
         )}
-        <article ref={articleRef} className="space-y-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-10">
+        <article
+          ref={articleRef}
+          className="space-y-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-10"
+        >
           {LESSON.sections.map((s) => (
             <section key={s.id} data-section-id={s.id} aria-labelledby={`h-${s.id}`}>
               <h2 id={`h-${s.id}`} className="text-xl font-semibold text-slate-900">
@@ -118,7 +142,11 @@ export default function ReadingLab() {
                   {p}
                 </p>
               ))}
-              {s.code && <pre className="mt-4 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-sm text-slate-100">{s.code}</pre>}
+              {s.code && (
+                <pre className="mt-4 overflow-x-auto rounded-lg bg-slate-900 p-4 font-mono text-sm text-slate-100">
+                  {s.code}
+                </pre>
+              )}
             </section>
           ))}
         </article>
@@ -127,7 +155,11 @@ export default function ReadingLab() {
         <Card title="This session">
           <LiveStats summary={lab.summary} kind="reading" />
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="secondary" disabled={!lab.session || !!lab.check} onClick={lab.requestCheck}>
+            <Button
+              variant="secondary"
+              disabled={!lab.session || !!lab.check}
+              onClick={lab.requestCheck}
+            >
               Check my understanding
             </Button>
             {lab.stopped ? (
@@ -151,18 +183,29 @@ export default function ReadingLab() {
             )}
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Estimated pace: {opts.readingWpm} wpm ({opts.readingWpm === prefs.readingBaselineWpm ? 'baseline reference' : 'personalised from your credible sessions'}).
+            Estimated pace: {opts.readingWpm} wpm (
+            {opts.readingWpm === prefs.readingBaselineWpm
+              ? 'baseline reference'
+              : 'personalised from your credible sessions'}
+            ).
           </p>
         </Card>
         {finished === 'discarded' && (
           <Card title="Not saved">
-            <p className="text-sm text-slate-700">The session was too short to record (under 5 seconds with no credited time).</p>
+            <p className="text-sm text-slate-700">
+              The session was too short to record (under 5 seconds with no credited time).
+            </p>
           </Card>
         )}
         {finished && finished !== 'discarded' && (
           <Card title="Saved">
             <p className="text-sm text-slate-700">
-              Session saved. Skill detection runs {ai ? 'now through Firebase AI Logic' : 'once AI is configured (queued)'}. See <Link className="text-indigo-700 underline" to="/app/sessions">Sessions</Link>.
+              Session saved. Skill detection runs{' '}
+              {ai ? 'now through Firebase AI Logic' : 'once AI is configured (queued)'}. See{' '}
+              <Link className="text-indigo-700 underline" to="/app/sessions">
+                Sessions
+              </Link>
+              .
             </p>
           </Card>
         )}

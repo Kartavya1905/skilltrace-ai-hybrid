@@ -17,12 +17,18 @@ export class GithubError extends Error {
 }
 
 async function gh<T>(path: string, fetchImpl: typeof fetch = fetch): Promise<T> {
-  const res = await fetchImpl(`${API}${path}`, { headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } });
+  const res = await fetchImpl(`${API}${path}`, {
+    headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+  });
   if (res.status === 403 || res.status === 429) {
     const reset = res.headers.get('x-ratelimit-reset');
-    throw new GithubError(`GitHub rate limit reached${reset ? `; resets at ${new Date(Number(reset) * 1000).toLocaleTimeString()}` : ''}.`, res.status);
+    throw new GithubError(
+      `GitHub rate limit reached${reset ? `; resets at ${new Date(Number(reset) * 1000).toLocaleTimeString()}` : ''}.`,
+      res.status,
+    );
   }
-  if (res.status === 404) throw new GithubError('Not found (the repository or user may be private or misspelled).', 404);
+  if (res.status === 404)
+    throw new GithubError('Not found (the repository or user may be private or misspelled).', 404);
   if (!res.ok) throw new GithubError(`GitHub API error ${res.status}`, res.status);
   return (await res.json()) as T;
 }
@@ -51,9 +57,14 @@ function decodeBase64Utf8(b64: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-export async function fetchRepo(owner: string, repo: string, fetchImpl: typeof fetch = fetch): Promise<RepoMetadata> {
+export async function fetchRepo(
+  owner: string,
+  repo: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<RepoMetadata> {
   const r = await gh<ApiRepo>(`/repos/${owner}/${repo}`, fetchImpl);
-  if (r.private) throw new GithubError('Private repositories are not imported in public mode.', 403);
+  if (r.private)
+    throw new GithubError('Private repositories are not imported in public mode.', 403);
   const [languages, readme] = await Promise.all([
     gh<Record<string, number>>(`/repos/${owner}/${repo}/languages`, fetchImpl).catch(() => ({})),
     gh<{ content: string }>(`/repos/${owner}/${repo}/readme`, fetchImpl)
@@ -74,13 +85,27 @@ export async function fetchRepo(owner: string, repo: string, fetchImpl: typeof f
   };
 }
 
-export async function listUserRepos(username: string, fetchImpl: typeof fetch = fetch): Promise<ApiRepo[]> {
-  const repos = await gh<ApiRepo[]>(`/users/${encodeURIComponent(username)}/repos?sort=pushed&per_page=30&type=owner`, fetchImpl);
+export async function listUserRepos(
+  username: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<ApiRepo[]> {
+  const repos = await gh<ApiRepo[]>(
+    `/users/${encodeURIComponent(username)}/repos?sort=pushed&per_page=30&type=owner`,
+    fetchImpl,
+  );
   return repos.filter((r) => !r.private);
 }
 
-export async function recentCommits(owner: string, repo: string, fetchImpl: typeof fetch = fetch, limit = 10) {
-  const commits = await gh<ApiCommit[]>(`/repos/${owner}/${repo}/commits?per_page=${limit}`, fetchImpl).catch(() => []);
+export async function recentCommits(
+  owner: string,
+  repo: string,
+  fetchImpl: typeof fetch = fetch,
+  limit = 10,
+) {
+  const commits = await gh<ApiCommit[]>(
+    `/repos/${owner}/${repo}/commits?per_page=${limit}`,
+    fetchImpl,
+  ).catch(() => []);
   return commits.map((c) => ({
     sha: c.sha.slice(0, 7),
     url: c.html_url,

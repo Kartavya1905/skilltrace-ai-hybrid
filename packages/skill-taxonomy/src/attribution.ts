@@ -25,7 +25,9 @@ export interface ClassificationLike {
 export function buildAttributions(c: ClassificationLike, context = ''): SkillAttribution[] {
   const primary = normalizeSkill(c.primarySkill, `${context} ${c.topics.join(' ')}`).name;
   if (!primary) return [];
-  const secondary = [...new Set((c.secondarySkills ?? []).map((s) => normalizeSkill(s, context).name))]
+  const secondary = [
+    ...new Set((c.secondarySkills ?? []).map((s) => normalizeSkill(s, context).name)),
+  ]
     .filter((s) => s && s !== primary)
     .slice(0, 3);
   const topics = uniqueTopics(c.topics);
@@ -94,7 +96,9 @@ const add = (rec: Record<string, number>, k: string, v: number) => {
   rec[k] = (rec[k] ?? 0) + v;
 };
 
-export function buildSkillTimelines(sessions: readonly SessionForTimeline[]): Map<string, SkillTimeline> {
+export function buildSkillTimelines(
+  sessions: readonly SessionForTimeline[],
+): Map<string, SkillTimeline> {
   const out = new Map<string, SkillTimeline>();
   for (const s of sessions) {
     if (s.attributions.length === 0) continue;

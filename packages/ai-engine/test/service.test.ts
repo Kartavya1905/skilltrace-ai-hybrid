@@ -1,7 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HybridAIService, SkillTraceAI, classifyError, parseModelJson, type InferenceModeValue, type ModelFactory, type ModelHandle } from '../src';
+import {
+  HybridAIService,
+  SkillTraceAI,
+  classifyError,
+  parseModelJson,
+  type InferenceModeValue,
+  type ModelFactory,
+  type ModelHandle,
+} from '../src';
 
-type Behaviour = (mode: InferenceModeValue, prompt: string) => Promise<{ text: string; source?: string }>;
+type Behaviour = (
+  mode: InferenceModeValue,
+  prompt: string,
+) => Promise<{ text: string; source?: string }>;
 
 function factory(behaviour: Behaviour) {
   const calls: { mode: InferenceModeValue; prompt: string }[] = [];
@@ -28,14 +39,27 @@ const goodClassification = JSON.stringify({
   confidence: 0.91,
 });
 
-const localUnavailable = () => Promise.reject(Object.assign(new Error('Inference mode is ONLY_ON_DEVICE, but an on-device model is not available.'), { code: 'unsupported' }));
+const localUnavailable = () =>
+  Promise.reject(
+    Object.assign(
+      new Error('Inference mode is ONLY_ON_DEVICE, but an on-device model is not available.'),
+      { code: 'unsupported' },
+    ),
+  );
 
-const input = { title: 'Python Functions: Parameters, Return Values and Scope', excerpt: 'def greet(name): return name', contentType: 'reading' };
+const input = {
+  title: 'Python Functions: Parameters, Return Values and Scope',
+  excerpt: 'def greet(name): return name',
+  contentType: 'reading',
+};
 
 describe('HybridAIService routing and consent', () => {
   it('allow -> PREFER_ON_DEVICE, and reports the SDK-reported source verbatim', async () => {
     const { f, calls } = factory(async () => ({ text: goodClassification, source: 'in_cloud' }));
-    const ai = new SkillTraceAI(new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }), () => true);
+    const ai = new SkillTraceAI(
+      new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }),
+      () => true,
+    );
     const r = await ai.classifySkills(input);
     expect(calls[0]!.mode).toBe('prefer_on_device');
     expect(r.ok && r.source).toBe('in_cloud');
@@ -45,13 +69,19 @@ describe('HybridAIService routing and consent', () => {
 
   it('never claims a source the SDK did not report', async () => {
     const { f } = factory(async () => ({ text: goodClassification }));
-    const r = await new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }).run('classify', { local: 'x', cloud: 'x', cloudDataDescription: '' });
+    const r = await new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }).run(
+      'classify',
+      { local: 'x', cloud: 'x', cloudDataDescription: '' },
+    );
     expect(r.ok && r.source).toBe('unknown');
   });
 
   it('deny -> ONLY_ON_DEVICE and nothing goes to the cloud when local is unavailable', async () => {
     const { f, calls } = factory(localUnavailable);
-    const r = await new HybridAIService(f, { consent: () => 'deny', isOnline: () => true }).run('classify', { local: 'L', cloud: 'C', cloudDataDescription: '' });
+    const r = await new HybridAIService(f, { consent: () => 'deny', isOnline: () => true }).run(
+      'classify',
+      { local: 'L', cloud: 'C', cloudDataDescription: '' },
+    );
     expect(calls.map((c) => c.mode)).toEqual(['only_on_device']);
     expect(r.ok).toBe(false);
     expect(!r.ok && r.error.kind).toBe('local_unavailable');
@@ -59,9 +89,16 @@ describe('HybridAIService routing and consent', () => {
   });
 
   it('ask -> tries on-device, asks for consent, then ONLY_IN_CLOUD with the minimised prompt', async () => {
-    const { f, calls } = factory(async (mode) => (mode === 'only_on_device' ? localUnavailable() : { text: goodClassification, source: 'in_cloud' }));
+    const { f, calls } = factory(async (mode) =>
+      mode === 'only_on_device'
+        ? localUnavailable()
+        : { text: goodClassification, source: 'in_cloud' },
+    );
     const requestCloudConsent = vi.fn(async () => true);
-    const ai = new SkillTraceAI(new HybridAIService(f, { consent: () => 'ask', isOnline: () => true, requestCloudConsent }), () => false);
+    const ai = new SkillTraceAI(
+      new HybridAIService(f, { consent: () => 'ask', isOnline: () => true, requestCloudConsent }),
+      () => false,
+    );
     const r = await ai.classifySkills(input);
     expect(requestCloudConsent).toHaveBeenCalledOnce();
     expect(calls.map((c) => c.mode)).toEqual(['only_on_device', 'only_in_cloud']);
@@ -72,7 +109,11 @@ describe('HybridAIService routing and consent', () => {
 
   it('ask + declined consent uploads nothing and returns a failure, not a result', async () => {
     const { f, calls } = factory(localUnavailable);
-    const r = await new HybridAIService(f, { consent: () => 'ask', isOnline: () => true, requestCloudConsent: async () => false }).run('classify', {
+    const r = await new HybridAIService(f, {
+      consent: () => 'ask',
+      isOnline: () => true,
+      requestCloudConsent: async () => false,
+    }).run('classify', {
       local: 'L',
       cloud: 'C',
       cloudDataDescription: 'd',
@@ -84,7 +125,11 @@ describe('HybridAIService routing and consent', () => {
   it('offline with no local model queues instead of claiming cloud fallback', async () => {
     const { f } = factory(localUnavailable);
     const consent = vi.fn(async () => true);
-    const r = await new HybridAIService(f, { consent: () => 'ask', isOnline: () => false, requestCloudConsent: consent }).run('classify', {
+    const r = await new HybridAIService(f, {
+      consent: () => 'ask',
+      isOnline: () => false,
+      requestCloudConsent: consent,
+    }).run('classify', {
       local: 'L',
       cloud: 'C',
       cloudDataDescription: '',
@@ -97,7 +142,11 @@ describe('HybridAIService routing and consent', () => {
   it('local success in ask mode never prompts for consent', async () => {
     const { f } = factory(async () => ({ text: goodClassification, source: 'on_device' }));
     const consent = vi.fn(async () => true);
-    const r = await new HybridAIService(f, { consent: () => 'ask', isOnline: () => true, requestCloudConsent: consent }).run('classify', {
+    const r = await new HybridAIService(f, {
+      consent: () => 'ask',
+      isOnline: () => true,
+      requestCloudConsent: consent,
+    }).run('classify', {
       local: 'L',
       cloud: 'C',
       cloudDataDescription: '',
@@ -110,7 +159,10 @@ describe('HybridAIService routing and consent', () => {
 describe('on-device privacy guard', () => {
   it('refuses on-device-only calls when the Prompt API is missing (SDK would use cloud)', async () => {
     const { f, calls } = factory(async () => ({ text: goodClassification, source: 'in_cloud' }));
-    const svc = new HybridAIService({ ...f, onDeviceApiPresent: () => false }, { consent: () => 'deny', isOnline: () => true });
+    const svc = new HybridAIService(
+      { ...f, onDeviceApiPresent: () => false },
+      { consent: () => 'deny', isOnline: () => true },
+    );
     const r = await svc.run('classify', { local: 'L', cloud: 'C', cloudDataDescription: '' });
     expect(calls).toHaveLength(0);
     expect(!r.ok && r.error.code).toBe('prompt-api-missing');
@@ -118,7 +170,10 @@ describe('on-device privacy guard', () => {
 
   it('discards an on-device-only result that the SDK says came from the cloud', async () => {
     const { f } = factory(async () => ({ text: goodClassification, source: 'in_cloud' }));
-    const r = await new HybridAIService(f, { consent: () => 'deny', isOnline: () => true }).run('classify', { local: 'L', cloud: 'C', cloudDataDescription: '' });
+    const r = await new HybridAIService(f, { consent: () => 'deny', isOnline: () => true }).run(
+      'classify',
+      { local: 'L', cloud: 'C', cloudDataDescription: '' },
+    );
     expect(r.ok).toBe(false);
     expect(!r.ok && r.error.kind).toBe('policy_violation');
   });
@@ -126,8 +181,14 @@ describe('on-device privacy guard', () => {
 
 describe('structured output validation', () => {
   it('rejects malformed JSON after one retry and returns no output', async () => {
-    const { f, calls } = factory(async () => ({ text: '{"primarySkill": "Python", "confid', source: 'on_device' }));
-    const r = await new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }).run('classify', { local: '', cloud: '', cloudDataDescription: '' });
+    const { f, calls } = factory(async () => ({
+      text: '{"primarySkill": "Python", "confid',
+      source: 'on_device',
+    }));
+    const r = await new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }).run(
+      'classify',
+      { local: '', cloud: '', cloudDataDescription: '' },
+    );
     expect(calls).toHaveLength(2);
     expect(r.ok).toBe(false);
     expect(!r.ok && r.error.kind).toBe('malformed_output');
@@ -136,7 +197,10 @@ describe('structured output validation', () => {
   it('rejects schema violations (confidence out of range)', async () => {
     const bad = JSON.stringify({ ...JSON.parse(goodClassification), confidence: 7 });
     const { f } = factory(async () => ({ text: bad, source: 'on_device' }));
-    const r = await new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }).run('classify', { local: '', cloud: '', cloudDataDescription: '' });
+    const r = await new HybridAIService(f, { consent: () => 'allow', isOnline: () => true }).run(
+      'classify',
+      { local: '', cloud: '', cloudDataDescription: '' },
+    );
     expect(r.ok).toBe(false);
   });
 
@@ -147,14 +211,29 @@ describe('structured output validation', () => {
 
 describe('error classification', () => {
   it('maps rate limits, network and App Check failures', () => {
-    expect(classifyError({ code: 'fetch-error', message: '429 RESOURCE_EXHAUSTED' }, 'prefer_on_device').kind).toBe('rate_limited');
-    expect(classifyError({ code: 'fetch-error', message: 'Failed to fetch' }, 'prefer_on_device').kind).toBe('network');
-    expect(classifyError({ code: 'fetch-error', message: '403 PERMISSION_DENIED App Check token is invalid' }, 'only_in_cloud').kind).toBe('app_check');
+    expect(
+      classifyError({ code: 'fetch-error', message: '429 RESOURCE_EXHAUSTED' }, 'prefer_on_device')
+        .kind,
+    ).toBe('rate_limited');
+    expect(
+      classifyError({ code: 'fetch-error', message: 'Failed to fetch' }, 'prefer_on_device').kind,
+    ).toBe('network');
+    expect(
+      classifyError(
+        { code: 'fetch-error', message: '403 PERMISSION_DENIED App Check token is invalid' },
+        'only_in_cloud',
+      ).kind,
+    ).toBe('app_check');
   });
 
   it('enforces a client-side cloud rate limit', async () => {
     const { f } = factory(async () => ({ text: goodClassification, source: 'in_cloud' }));
-    const svc = new HybridAIService(f, { consent: () => 'allow', isOnline: () => true, cloudCallsPerMinute: 2, now: () => 1000 });
+    const svc = new HybridAIService(f, {
+      consent: () => 'allow',
+      isOnline: () => true,
+      cloudCallsPerMinute: 2,
+      now: () => 1000,
+    });
     const p = { local: '', cloud: '', cloudDataDescription: '' };
     await svc.run('classify', p);
     await svc.run('classify', p);

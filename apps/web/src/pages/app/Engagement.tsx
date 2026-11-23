@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { touch, type EngagementCheckRecord } from '@skilltrace/shared';
 import { useApp } from '../../lib/app-context';
-import { Badge, Button, Card, EmptyState, Field, Modal, PageHeader, inputCls } from '../../components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Modal,
+  PageHeader,
+  inputCls,
+} from '../../components/ui';
 
 export default function Engagement() {
   const { data, store } = useApp();
@@ -23,7 +32,10 @@ export default function Engagement() {
         <Badge>{wrong} incorrect answers (no penalty)</Badge>
       </div>
       {checks.length === 0 ? (
-        <EmptyState title="No checks yet">Checks appear during Learning Lab or extension sessions. Turn on DEMO mode in Settings to see one within a minute.</EmptyState>
+        <EmptyState title="No checks yet">
+          Checks appear during Learning Lab or extension sessions. Turn on DEMO mode in Settings to
+          see one within a minute.
+        </EmptyState>
       ) : (
         <Card>
           <table className="w-full text-left text-sm">
@@ -43,8 +55,20 @@ export default function Engagement() {
                   <td className="py-2">{new Date(c.issuedAt).toLocaleString()}</td>
                   <td>{c.kind === 'video_presence' ? 'Video presence' : 'Reading question'}</td>
                   <td>{c.trigger.replace('_', ' ')}</td>
-                  <td>{c.outcome === 'responded' ? <Badge tone="green">Responded</Badge> : <Badge tone="amber">Missed</Badge>}</td>
-                  <td>{c.answerCorrect === null ? '—' : c.answerCorrect ? 'Correct' : 'Incorrect (no penalty)'}</td>
+                  <td>
+                    {c.outcome === 'responded' ? (
+                      <Badge tone="green">Responded</Badge>
+                    ) : (
+                      <Badge tone="amber">Missed</Badge>
+                    )}
+                  </td>
+                  <td>
+                    {c.answerCorrect === null
+                      ? '—'
+                      : c.answerCorrect
+                        ? 'Correct'
+                        : 'Incorrect (no penalty)'}
+                  </td>
                   <td className="text-right">
                     {c.outcome === 'missed' &&
                       (c.disputed ? (
@@ -65,16 +89,27 @@ export default function Engagement() {
       )}
       <Modal open={!!disputing} title="Dispute a missed check" onClose={() => setDisputing(null)}>
         <p className="text-sm text-slate-600">
-          Tell us what happened (for example, you were following along but could not reach the prompt in time). The dispute is attached to the audit trail and shown
-          with the affected interval. Credit is not silently restored, so the passport stays trustworthy; you can enable longer response windows in Settings.
+          Tell us what happened (for example, you were following along but could not reach the
+          prompt in time). The dispute is attached to the audit trail and shown with the affected
+          interval. Credit is not silently restored, so the passport stays trustworthy; you can
+          enable longer response windows in Settings.
         </p>
         <Field label="Note">
-          <textarea className={inputCls} rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
+          <textarea
+            className={inputCls}
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
         </Field>
         <div className="mt-4 flex gap-2">
           <Button
             onClick={async () => {
-              if (store && disputing) await store.put('engagement_checks', touch({ ...disputing, disputed: true, disputeNote: note.slice(0, 500) }));
+              if (store && disputing)
+                await store.put(
+                  'engagement_checks',
+                  touch({ ...disputing, disputed: true, disputeNote: note.slice(0, 500) }),
+                );
               setDisputing(null);
               setNote('');
             }}

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PlaybackTracker, defaultPlaybackConfig, replayPlayback, type VerificationConfig } from '../src';
+import {
+  PlaybackTracker,
+  defaultPlaybackConfig,
+  replayPlayback,
+  type VerificationConfig,
+} from '../src';
 import { EventLog, MIN } from './helpers';
 
 const video = () => defaultPlaybackConfig('video');
@@ -184,7 +189,11 @@ describe('video engagement verification', () => {
 
   it('production defaults are 5 to 90 minutes with a 30 s response window', async () => {
     const { PRODUCTION_VIDEO_VERIFICATION } = await import('../src');
-    expect(PRODUCTION_VIDEO_VERIFICATION).toEqual({ minMs: 5 * MIN, maxMs: 90 * MIN, responseWindowMs: 30_000 });
+    expect(PRODUCTION_VIDEO_VERIFICATION).toEqual({
+      minMs: 5 * MIN,
+      maxMs: 90 * MIN,
+      responseWindowMs: 30_000,
+    });
   });
 
   it('a missed verification invalidates only the interval since the last verified point', () => {
@@ -223,8 +232,21 @@ describe('video engagement verification', () => {
 
   it('live mode schedules a check once credited time reaches the randomised threshold', () => {
     let now = 1_000_000;
-    const tracker = new PlaybackTracker({ ...video(), verification: { ...verification(5 * MIN, 90 * MIN), rng: () => 0.5 } }, 6000);
-    tracker.apply({ id: 'p', sessionId: 's', seq: 0, t: now, kind: 'media', type: 'play', pos: 0, rate: 1, duration: 6000 });
+    const tracker = new PlaybackTracker(
+      { ...video(), verification: { ...verification(5 * MIN, 90 * MIN), rng: () => 0.5 } },
+      6000,
+    );
+    tracker.apply({
+      id: 'p',
+      sessionId: 's',
+      seq: 0,
+      t: now,
+      kind: 'media',
+      type: 'play',
+      pos: 0,
+      rate: 1,
+      duration: 6000,
+    });
     const threshold = 5 * MIN + 0.5 * 85 * MIN;
     expect(tracker.isCheckDue(now + threshold - 1000)).toBe(false);
     now += threshold;

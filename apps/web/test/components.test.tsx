@@ -18,7 +18,13 @@ describe('EngagementPrompt', () => {
     render(
       <EngagementPrompt
         check={check('reading_question')}
-        question={{ question: 'What does a function return without return?', options: ['0', 'None'], correctIndex: 1, explanation: '', source: 'author' }}
+        question={{
+          question: 'What does a function return without return?',
+          options: ['0', 'None'],
+          correctIndex: 1,
+          explanation: '',
+          source: 'author',
+        }}
         onRespond={onRespond}
       />,
     );

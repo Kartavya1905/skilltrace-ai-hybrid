@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { applyTimer, newTimer, projectTimeByProject, timerElapsed, validateManualSession } from '../src';
+import {
+  applyTimer,
+  newTimer,
+  projectTimeByProject,
+  timerElapsed,
+  validateManualSession,
+} from '../src';
 
 describe('project timer', () => {
   it('accumulates only running time across pause/resume', () => {
@@ -24,8 +30,12 @@ describe('project timer', () => {
 
   it('validates manual entries', () => {
     const now = Date.parse('2026-11-22T12:00:00Z');
-    expect(validateManualSession('2026-11-22T10:00:00Z', '2026-11-22T09:00:00Z', now)).toMatch(/after/);
-    expect(validateManualSession('2026-11-22T10:00:00Z', '2026-11-23T10:00:00Z', now)).toMatch(/future/);
+    expect(validateManualSession('2026-11-22T10:00:00Z', '2026-11-22T09:00:00Z', now)).toMatch(
+      /after/,
+    );
+    expect(validateManualSession('2026-11-22T10:00:00Z', '2026-11-23T10:00:00Z', now)).toMatch(
+      /future/,
+    );
     expect(validateManualSession('2026-11-22T09:00:00Z', '2026-11-22T11:00:00Z', now)).toBeNull();
   });
 });

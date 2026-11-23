@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { envelope, hash53 } from '@skilltrace/shared';
-import { normalizeSkill, parseRepoUrl, repoRelevance, skillHintsFromRepo, type RepoMetadata } from '@skilltrace/skill-taxonomy';
+import {
+  normalizeSkill,
+  parseRepoUrl,
+  repoRelevance,
+  skillHintsFromRepo,
+  type RepoMetadata,
+} from '@skilltrace/skill-taxonomy';
 import { useApp } from '../../lib/app-context';
 import { fetchRepo, listUserRepos, recentCommits } from '../../lib/github';
 import { addMilestone, newProject, setProjectSkills } from '../../lib/actions';
@@ -17,7 +23,9 @@ export default function Github() {
   const { data, store, ai } = useApp();
   const [url, setUrl] = useState('');
   const [username, setUsername] = useState(data.github_connections[0]?.username ?? '');
-  const [repos, setRepos] = useState<{ full_name: string; description: string | null; pushed_at: string }[]>([]);
+  const [repos, setRepos] = useState<
+    { full_name: string; description: string | null; pushed_at: string }[]
+  >([]);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -45,7 +53,11 @@ export default function Github() {
           languages: Object.keys(meta.languages).join(', '),
           readme: meta.readme.slice(0, 2500),
         });
-        if (r.ok) aiSkills = r.output.skills.map((s) => ({ skill: normalizeSkill(s.skill, meta.description).name, reason: `AI (${r.source}): ${s.reason}` }));
+        if (r.ok)
+          aiSkills = r.output.skills.map((s) => ({
+            skill: normalizeSkill(s.skill, meta.description).name,
+            reason: `AI (${r.source}): ${s.reason}`,
+          }));
       }
       const project = newProject(
         store.uid,
@@ -63,17 +75,50 @@ export default function Github() {
         'github_metadata',
       );
       await store.put('projects', project);
-      await setProjectSkills(store, project, [...new Set(hints.map((h) => h.skill))], 'github_languages', false);
+      await setProjectSkills(
+        store,
+        project,
+        [...new Set(hints.map((h) => h.skill))],
+        'github_languages',
+        false,
+      );
       const aiOnly = aiSkills.filter((s) => s.skill && !hints.some((h) => h.skill === s.skill));
-      await setProjectSkills(store, project, aiOnly.map((s) => s.skill), 'ai_suggestion', false);
+      await setProjectSkills(
+        store,
+        project,
+        aiOnly.map((s) => s.skill),
+        'ai_suggestion',
+        false,
+      );
       // Milestones: evidence markers with zero duration. Never project hours.
-      await addMilestone(store, { projectId, kind: 'repo_created', title: 'Repository created', occurredAt: meta.createdAt, url: meta.htmlUrl });
-      await addMilestone(store, { projectId, kind: 'last_push', title: 'Most recent push', occurredAt: meta.pushedAt, url: meta.htmlUrl });
+      await addMilestone(store, {
+        projectId,
+        kind: 'repo_created',
+        title: 'Repository created',
+        occurredAt: meta.createdAt,
+        url: meta.htmlUrl,
+      });
+      await addMilestone(store, {
+        projectId,
+        kind: 'last_push',
+        title: 'Most recent push',
+        occurredAt: meta.pushedAt,
+        url: meta.htmlUrl,
+      });
       for (const c of await recentCommits(owner, name)) {
-        if (c.date) await addMilestone(store, { projectId, kind: 'commit', title: `${c.sha} ${c.message}`, occurredAt: c.date, url: c.url });
+        if (c.date)
+          await addMilestone(store, {
+            projectId,
+            kind: 'commit',
+            title: `${c.sha} ${c.message}`,
+            occurredAt: c.date,
+            url: c.url,
+          });
       }
       const relevance = repoRelevance(hints, learnerSkills);
-      setMessage(`Imported ${meta.fullName}${relevance ? `: relevant to ${relevance} skill(s) you study` : ''}. Review it under Projects to confirm.`);
+      setMessage(
+        `Imported ${meta.fullName}${relevance ? `: relevant to ${relevance} skill(s) you study` : ''}. Review it under Projects to confirm.`,
+      );
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -108,9 +153,10 @@ export default function Github() {
         subtitle="Repositories become evidence milestones, not hours. Importing never changes learning time, and commits never create project work time."
       />
       <div className="rounded-xl bg-slate-50 p-4 text-xs text-slate-600 ring-1 ring-slate-200">
-        <Badge tone="amber">Public mode (fallback)</Badge> Uses GitHub's public REST API without any token: read-only, public repositories only, 60 requests/hour.
-        Full GitHub App authorisation requires a server-side token exchange and is documented as future work. Repository ownership does not prove every contribution
-        was authored independently.
+        <Badge tone="amber">Public mode (fallback)</Badge> Uses GitHub's public REST API without any
+        token: read-only, public repositories only, 60 requests/hour. Full GitHub App authorisation
+        requires a server-side token exchange and is documented as future work. Repository ownership
+        does not prove every contribution was authored independently.
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Import a public repository URL">
@@ -123,7 +169,13 @@ export default function Github() {
               else void importRepo(p.owner, p.repo);
             }}
           >
-            <input className={inputCls} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/owner/repo" aria-label="Repository URL" />
+            <input
+              className={inputCls}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://github.com/owner/repo"
+              aria-label="Repository URL"
+            />
             <Button type="submit" disabled={!!busy}>
               Import
             </Button>
@@ -132,7 +184,11 @@ export default function Github() {
         <Card title="Discover your public repositories">
           <div className="flex items-end gap-2">
             <Field label="GitHub username">
-              <input className={inputCls} value={username} onChange={(e) => setUsername(e.target.value)} />
+              <input
+                className={inputCls}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
             </Field>
             <Button onClick={discover} disabled={!!busy || !username}>
               Discover
@@ -141,7 +197,11 @@ export default function Github() {
           {connection && (
             <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
               Saved username: {connection.username}
-              <button type="button" className="text-rose-700 hover:underline" onClick={() => store?.remove('github_connections', connection.id)}>
+              <button
+                type="button"
+                className="text-rose-700 hover:underline"
+                onClick={() => store?.remove('github_connections', connection.id)}
+              >
                 Disconnect
               </button>
             </div>
@@ -155,7 +215,10 @@ export default function Github() {
       )}
       {message && (
         <p className="text-sm text-emerald-700">
-          {message} <Link className="underline" to="/app/projects">Go to Projects</Link>
+          {message}{' '}
+          <Link className="underline" to="/app/projects">
+            Go to Projects
+          </Link>
         </p>
       )}
       {repos.length > 0 && (
@@ -163,14 +226,23 @@ export default function Github() {
           <ul className="divide-y divide-slate-100">
             {repos.map((r) => {
               const [owner, name] = r.full_name.split('/') as [string, string];
-              const imported = data.projects.some((p) => p.id === `gh_${hash53(r.full_name.toLowerCase())}`);
+              const imported = data.projects.some(
+                (p) => p.id === `gh_${hash53(r.full_name.toLowerCase())}`,
+              );
               return (
-                <li key={r.full_name} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                <li
+                  key={r.full_name}
+                  className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
+                >
                   <div>
                     <div className="font-medium">{r.full_name}</div>
                     <div className="text-xs text-slate-500">{r.description}</div>
                   </div>
-                  <Button variant="secondary" disabled={imported || !!busy} onClick={() => importRepo(owner, name)}>
+                  <Button
+                    variant="secondary"
+                    disabled={imported || !!busy}
+                    onClick={() => importRepo(owner, name)}
+                  >
                     {imported ? 'Imported' : busy === r.full_name ? 'Importing…' : 'Import'}
                   </Button>
                 </li>

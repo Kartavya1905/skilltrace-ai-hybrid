@@ -62,8 +62,14 @@ export class SkillTraceAI {
     });
   }
 
-  generateEngagementQuestion(input: { skill: string; sectionHeading: string; sectionText: string }): Promise<AIResult<EngagementQuestion>> {
-    const cloudText = this.allowCloudExcerpts() ? input.sectionText.slice(0, 1200) : input.sectionHeading;
+  generateEngagementQuestion(input: {
+    skill: string;
+    sectionHeading: string;
+    sectionText: string;
+  }): Promise<AIResult<EngagementQuestion>> {
+    const cloudText = this.allowCloudExcerpts()
+      ? input.sectionText.slice(0, 1200)
+      : input.sectionHeading;
     return this.service.run<EngagementQuestion>('question', {
       local: questionPrompt(input),
       cloud: questionPrompt({ ...input, sectionText: cloudText }),
@@ -71,25 +77,39 @@ export class SkillTraceAI {
     });
   }
 
-  summarizeLearningSession(input: { title: string; topics: string[]; minutes: number; contentType: string }): Promise<AIResult<SessionSummary>> {
+  summarizeLearningSession(input: {
+    title: string;
+    topics: string[];
+    minutes: number;
+    contentType: string;
+  }): Promise<AIResult<SessionSummary>> {
     const p = summaryPrompt(input);
     return this.service.run<SessionSummary>('summary', {
       local: p,
       cloud: p,
-      cloudDataDescription: 'Session summary: the material title, detected topics and active minutes.',
+      cloudDataDescription:
+        'Session summary: the material title, detected topics and active minutes.',
     });
   }
 
-  explainSkillEvidence(input: { skill: string; evidence: string }): Promise<AIResult<EvidenceExplanation>> {
+  explainSkillEvidence(input: {
+    skill: string;
+    evidence: string;
+  }): Promise<AIResult<EvidenceExplanation>> {
     const p = explainPrompt(input);
     return this.service.run<EvidenceExplanation>('explain', {
       local: p,
       cloud: p,
-      cloudDataDescription: 'Evidence explanation: aggregated hours, topics and assessment scores for one skill.',
+      cloudDataDescription:
+        'Evidence explanation: aggregated hours, topics and assessment scores for one skill.',
     });
   }
 
-  generatePassportSummary(input: { name: string; skills: string; projects: string }): Promise<AIResult<PassportSummary>> {
+  generatePassportSummary(input: {
+    name: string;
+    skills: string;
+    projects: string;
+  }): Promise<AIResult<PassportSummary>> {
     const p = passportPrompt(input);
     return this.service.run<PassportSummary>('passport', {
       local: p,
@@ -98,18 +118,27 @@ export class SkillTraceAI {
     });
   }
 
-  suggestRepoSkills(input: { name: string; description: string; languages: string; readme: string }): Promise<AIResult<RepoSkills>> {
+  suggestRepoSkills(input: {
+    name: string;
+    description: string;
+    languages: string;
+    readme: string;
+  }): Promise<AIResult<RepoSkills>> {
     return this.service.run<RepoSkills>('repoSkills', {
       local: repoSkillsPrompt(input),
       // Public repository metadata only; the README is already public on GitHub.
       cloud: repoSkillsPrompt(input),
-      cloudDataDescription: 'Project skill suggestions: public repository name, description, languages and README excerpt.',
+      cloudDataDescription:
+        'Project skill suggestions: public repository name, description, languages and README excerpt.',
     });
   }
 }
 
 /** Turn a validated classification into weighted skill attributions. */
-export function attributionsFromClassification(c: Classification, context: string): SkillAttribution[] {
+export function attributionsFromClassification(
+  c: Classification,
+  context: string,
+): SkillAttribution[] {
   if (!c.isLearningContent) return [];
   return buildAttributions(c, context);
 }

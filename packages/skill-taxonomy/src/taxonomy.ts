@@ -20,7 +20,15 @@ export const TAXONOMY: SkillDefinition[] = [
     name: 'Python',
     category: 'Programming Languages',
     aliases: ['python', 'python3', 'python 3', 'py', 'cpython', 'python programming'],
-    subskills: ['Fundamentals', 'Data Types', 'Functions', 'Object-Oriented Programming', 'APIs', 'Modules', 'Error Handling'],
+    subskills: [
+      'Fundamentals',
+      'Data Types',
+      'Functions',
+      'Object-Oriented Programming',
+      'APIs',
+      'Modules',
+      'Error Handling',
+    ],
   },
   {
     name: 'JavaScript',
@@ -39,16 +47,41 @@ export const TAXONOMY: SkillDefinition[] = [
   {
     name: 'SQL',
     category: 'Data',
-    aliases: ['sql', 'structured query language', 'postgresql', 'postgres', 'mysql', 'sqlite', 't-sql', 'tsql'],
+    aliases: [
+      'sql',
+      'structured query language',
+      'postgresql',
+      'postgres',
+      'mysql',
+      'sqlite',
+      't-sql',
+      'tsql',
+    ],
     subskills: ['Queries', 'Joins', 'Aggregation', 'Schema Design', 'Indexes'],
   },
   {
     name: 'Machine Learning',
     category: 'AI & Data Science',
     aliases: ['machine learning', 'ml', 'statistical learning'],
-    subskills: ['Supervised Learning', 'Unsupervised Learning', 'Model Evaluation', 'Feature Engineering'],
+    subskills: [
+      'Supervised Learning',
+      'Unsupervised Learning',
+      'Model Evaluation',
+      'Feature Engineering',
+    ],
     ambiguousAliases: ['ml'],
-    contextHints: ['model', 'training', 'learning', 'dataset', 'regression', 'classification', 'neural', 'scikit', 'predict', 'feature'],
+    contextHints: [
+      'model',
+      'training',
+      'learning',
+      'dataset',
+      'regression',
+      'classification',
+      'neural',
+      'scikit',
+      'predict',
+      'feature',
+    ],
   },
   {
     name: 'Deep Learning',
@@ -64,35 +97,106 @@ export const TAXONOMY: SkillDefinition[] = [
     aliases: ['react', 'react.js', 'reactjs', 'react js'],
     subskills: ['Components', 'Hooks', 'State', 'Routing'],
   },
-  { name: 'HTML', category: 'Frontend', aliases: ['html', 'html5'], subskills: ['Semantics', 'Forms', 'Accessibility'] },
-  { name: 'CSS', category: 'Frontend', aliases: ['css', 'css3', 'tailwind', 'tailwind css'], subskills: ['Layout', 'Responsive Design'] },
-  { name: 'Node.js', category: 'Backend', aliases: ['node', 'node.js', 'nodejs', 'node js'], subskills: ['Modules', 'Streams', 'HTTP'] },
-  { name: 'FastAPI', category: 'Backend', aliases: ['fastapi', 'fast api'], subskills: ['Routing', 'Validation', 'Dependency Injection'] },
+  {
+    name: 'HTML',
+    category: 'Frontend',
+    aliases: ['html', 'html5'],
+    subskills: ['Semantics', 'Forms', 'Accessibility'],
+  },
+  {
+    name: 'CSS',
+    category: 'Frontend',
+    aliases: ['css', 'css3', 'tailwind', 'tailwind css'],
+    subskills: ['Layout', 'Responsive Design'],
+  },
+  {
+    name: 'Node.js',
+    category: 'Backend',
+    aliases: ['node', 'node.js', 'nodejs', 'node js'],
+    subskills: ['Modules', 'Streams', 'HTTP'],
+  },
+  {
+    name: 'FastAPI',
+    category: 'Backend',
+    aliases: ['fastapi', 'fast api'],
+    subskills: ['Routing', 'Validation', 'Dependency Injection'],
+  },
   {
     name: 'REST APIs',
     category: 'Backend',
-    aliases: ['rest', 'rest api', 'rest apis', 'restful', 'restful api', 'http api', 'web api', 'apis', 'api'],
+    aliases: [
+      'rest',
+      'rest api',
+      'rest apis',
+      'restful',
+      'restful api',
+      'http api',
+      'web api',
+      'apis',
+      'api',
+    ],
     subskills: ['HTTP Methods', 'Status Codes', 'Authentication', 'JSON'],
   },
   {
     name: 'Backend Development',
     category: 'Backend',
-    aliases: ['backend', 'back-end', 'backend development', 'server-side', 'server side development'],
+    aliases: [
+      'backend',
+      'back-end',
+      'backend development',
+      'server-side',
+      'server side development',
+    ],
     subskills: ['APIs', 'Databases', 'Authentication', 'Deployment'],
   },
-  { name: 'Firebase', category: 'Cloud', aliases: ['firebase', 'firestore', 'cloud firestore', 'firebase auth'], subskills: ['Firestore', 'Authentication', 'Hosting', 'AI Logic'] },
-  { name: 'Git', category: 'Tools', aliases: ['git', 'github', 'version control'], subskills: ['Branching', 'Merging', 'Collaboration'] },
-  { name: 'Docker', category: 'DevOps', aliases: ['docker', 'containers', 'containerization', 'dockerfile'], subskills: ['Images', 'Compose'] },
-  { name: 'Java', category: 'Programming Languages', aliases: ['java', 'jdk', 'java se'], subskills: ['OOP', 'Collections', 'Concurrency'] },
-  { name: 'C++', category: 'Programming Languages', aliases: ['c++', 'cpp', 'cplusplus'], subskills: ['Memory', 'STL', 'Templates'] },
+  {
+    name: 'Firebase',
+    category: 'Cloud',
+    aliases: ['firebase', 'firestore', 'cloud firestore', 'firebase auth'],
+    subskills: ['Firestore', 'Authentication', 'Hosting', 'AI Logic'],
+  },
+  {
+    name: 'Git',
+    category: 'Tools',
+    aliases: ['git', 'github', 'version control'],
+    subskills: ['Branching', 'Merging', 'Collaboration'],
+  },
+  {
+    name: 'Docker',
+    category: 'DevOps',
+    aliases: ['docker', 'containers', 'containerization', 'dockerfile'],
+    subskills: ['Images', 'Compose'],
+  },
+  {
+    name: 'Java',
+    category: 'Programming Languages',
+    aliases: ['java', 'jdk', 'java se'],
+    subskills: ['OOP', 'Collections', 'Concurrency'],
+  },
+  {
+    name: 'C++',
+    category: 'Programming Languages',
+    aliases: ['c++', 'cpp', 'cplusplus'],
+    subskills: ['Memory', 'STL', 'Templates'],
+  },
   {
     name: 'Data Structures & Algorithms',
     category: 'Computer Science',
     aliases: ['data structures', 'algorithms', 'dsa', 'data structures and algorithms'],
     subskills: ['Arrays', 'Trees', 'Graphs', 'Sorting', 'Complexity'],
   },
-  { name: 'Statistics', category: 'AI & Data Science', aliases: ['statistics', 'stats', 'probability'], subskills: ['Descriptive', 'Inference', 'Probability'] },
-  { name: 'Data Analysis', category: 'AI & Data Science', aliases: ['data analysis', 'pandas', 'data analytics', 'numpy'], subskills: ['Cleaning', 'Visualisation', 'Exploration'] },
+  {
+    name: 'Statistics',
+    category: 'AI & Data Science',
+    aliases: ['statistics', 'stats', 'probability'],
+    subskills: ['Descriptive', 'Inference', 'Probability'],
+  },
+  {
+    name: 'Data Analysis',
+    category: 'AI & Data Science',
+    aliases: ['data analysis', 'pandas', 'data analytics', 'numpy'],
+    subskills: ['Cleaning', 'Visualisation', 'Exploration'],
+  },
 ];
 
 const aliasIndex = new Map<string, SkillDefinition>();
@@ -114,7 +218,9 @@ function titleCase(raw: string): string {
     .trim()
     .replace(/\s+/g, ' ')
     .split(' ')
-    .map((w) => (w.length <= 3 && w === w.toUpperCase() ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .map((w) =>
+      w.length <= 3 && w === w.toUpperCase() ? w : w.charAt(0).toUpperCase() + w.slice(1),
+    )
     .join(' ');
 }
 
@@ -133,14 +239,20 @@ export interface NormalizedSkill {
 export function normalizeSkill(raw: string, context = ''): NormalizedSkill {
   const c = clean(raw);
   if (!c) return { name: '', known: false, category: 'Other', ambiguous: false };
-  const candidates = [c, c.replace(/\s*v?\d+(\.\d+)*$/, ''), c.replace(/[.\-_]/g, ' ').trim(), c.replace(/\s+/g, '')];
+  const candidates = [
+    c,
+    c.replace(/\s*v?\d+(\.\d+)*$/, ''),
+    c.replace(/[.\-_]/g, ' ').trim(),
+    c.replace(/\s+/g, ''),
+  ];
   for (const cand of candidates) {
     const def = aliasIndex.get(cand);
     if (!def) continue;
     if (def.ambiguousAliases?.includes(cand)) {
       const ctx = context.toLowerCase();
       const supported = def.contextHints?.some((h) => ctx.includes(h)) ?? false;
-      if (!supported) return { name: raw.trim().toUpperCase(), known: false, category: 'Other', ambiguous: true };
+      if (!supported)
+        return { name: raw.trim().toUpperCase(), known: false, category: 'Other', ambiguous: true };
     }
     return { name: def.name, known: true, category: def.category, ambiguous: false };
   }

@@ -16,7 +16,9 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const scripts = JSON.parse(readFileSync(join(root, 'apps/web/src/content/media-scripts.json'), 'utf8'));
+const scripts = JSON.parse(
+  readFileSync(join(root, 'apps/web/src/content/media-scripts.json'), 'utf8'),
+);
 const outDir = join(root, 'apps/web/public/lab/media');
 const tmp = join(root, 'scripts/.media-tmp');
 const SAMPLE_RATE = 48_000; // Opus requires 48 kHz
@@ -30,7 +32,10 @@ mkdirSync(tmp, { recursive: true });
 
 function synthesize(name, sentences) {
   const list = join(tmp, `${name}.json`);
-  writeFileSync(list, JSON.stringify(sentences.map((text, i) => ({ text, file: join(tmp, `${name}-${i}.wav`) }))));
+  writeFileSync(
+    list,
+    JSON.stringify(sentences.map((text, i) => ({ text, file: join(tmp, `${name}-${i}.wav`) }))),
+  );
   const ps = `
 Add-Type -AssemblyName System.Speech
 $items = Get-Content -Raw -LiteralPath '${list.replace(/'/g, "''")}' | ConvertFrom-Json
@@ -43,7 +48,9 @@ $s.Dispose()
 `;
   const psFile = join(tmp, `${name}.ps1`);
   writeFileSync(psFile, ps);
-  execFileSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', psFile], { stdio: 'inherit' });
+  execFileSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', psFile], {
+    stdio: 'inherit',
+  });
 }
 
 function readWav(file) {
@@ -54,7 +61,8 @@ function readWav(file) {
     const size = buf.readUInt32LE(off + 4);
     if (id === 'data') {
       const samples = new Float32Array(size / 2);
-      for (let i = 0; i < samples.length; i++) samples[i] = buf.readInt16LE(off + 8 + i * 2) / 32768;
+      for (let i = 0; i < samples.length; i++)
+        samples[i] = buf.readInt16LE(off + 8 + i * 2) / 32768;
       return samples;
     }
     off += 8 + size + (size % 2);
@@ -88,28 +96,45 @@ function assemble(name, lesson) {
       t += dur + (i === slide.narration.length - 1 ? 0 : GAP_SENTENCE);
     }
     t += GAP_SLIDE;
-    slideTimes.push({ start: Math.max(0, start - (slideTimes.length ? GAP_SLIDE / 2 : start)), end: t - GAP_SLIDE / 2 });
+    slideTimes.push({
+      start: Math.max(0, start - (slideTimes.length ? GAP_SLIDE / 2 : start)),
+      end: t - GAP_SLIDE / 2,
+    });
   }
   const total = t;
   const audio = new Float32Array(Math.ceil(total * SAMPLE_RATE));
   for (const p of pieces) audio.set(p.pcm, Math.round(p.at * SAMPLE_RATE));
   slideTimes[slideTimes.length - 1].end = total;
-  const vtt = ['WEBVTT', '', ...cues.map((c, i) => `${i + 1}\n${vttTime(c.start)} --> ${vttTime(c.end)}\n${c.text}\n`)].join('\n');
+  const vtt = [
+    'WEBVTT',
+    '',
+    ...cues.map((c, i) => `${i + 1}\n${vttTime(c.start)} --> ${vttTime(c.end)}\n${c.text}\n`),
+  ].join('\n');
   writeFileSync(join(outDir, `${name}.vtt`), vtt);
   const int16 = Buffer.alloc(audio.length * 2);
-  for (let i = 0; i < audio.length; i++) int16.writeInt16LE(Math.max(-32768, Math.min(32767, Math.round(audio[i] * 32767))), i * 2);
+  for (let i = 0; i < audio.length; i++)
+    int16.writeInt16LE(Math.max(-32768, Math.min(32767, Math.round(audio[i] * 32767))), i * 2);
   return { total, slideTimes, pcmBase64: int16.toString('base64') };
 }
 
-const mediabunny = readFileSync(join(root, 'node_modules/mediabunny/dist/bundles/mediabunny.min.mjs'), 'utf8');
+const mediabunny = readFileSync(
+  join(root, 'node_modules/mediabunny/dist/bundles/mediabunny.min.mjs'),
+  'utf8',
+);
 // Prefer installed Google Chrome (no browser download); falls back to Playwright's Chromium.
-const browser = await chromium.launch({ channel: process.env.MEDIA_BROWSER_CHANNEL ?? 'chrome' }).catch(() => chromium.launch());
+const browser = await chromium
+  .launch({ channel: process.env.MEDIA_BROWSER_CHANNEL ?? 'chrome' })
+  .catch(() => chromium.launch());
 const page = await browser.newPage();
 // A routed localhost origin is a secure context, which WebCodecs requires.
 await page.route('http://localhost:59999/**', (route) => {
   const url = route.request().url();
-  if (url.endsWith('/mediabunny.mjs')) return route.fulfill({ body: mediabunny, contentType: 'text/javascript' });
-  return route.fulfill({ body: '<!doctype html><html><body></body></html>', contentType: 'text/html' });
+  if (url.endsWith('/mediabunny.mjs'))
+    return route.fulfill({ body: mediabunny, contentType: 'text/javascript' });
+  return route.fulfill({
+    body: '<!doctype html><html><body></body></html>',
+    contentType: 'text/html',
+  });
 });
 await page.goto('http://localhost:59999/');
 
@@ -126,14 +151,21 @@ for (const [name, lesson] of Object.entries(scripts)) {
         if (v >= 0x8000) v -= 0x10000;
         pcm[i] = v / 32768;
       }
-      const output = new MB.Output({ format: new MB.WebMOutputFormat(), target: new MB.BufferTarget() });
+      const output = new MB.Output({
+        format: new MB.WebMOutputFormat(),
+        target: new MB.BufferTarget(),
+      });
       let canvas = null;
       let videoSource = null;
       if (lesson.kind === 'video') {
         canvas = document.createElement('canvas');
         canvas.width = 1280;
         canvas.height = 720;
-        videoSource = new MB.CanvasSource(canvas, { codec: 'vp9', quality: MB.QUALITY_MEDIUM, keyFrameInterval: 1 });
+        videoSource = new MB.CanvasSource(canvas, {
+          codec: 'vp9',
+          quality: MB.QUALITY_MEDIUM,
+          keyFrameInterval: 1,
+        });
         output.addVideoTrack(videoSource, { frameRate: 10 });
       }
       const audioSource = new MB.AudioBufferSource({ codec: 'opus', quality: MB.QUALITY_MEDIUM });
@@ -143,7 +175,11 @@ for (const [name, lesson] of Object.entries(scripts)) {
       // Audio in 1-second chunks to respect encoder backpressure.
       for (let off = 0; off < pcm.length; off += SAMPLE_RATE) {
         const chunk = pcm.subarray(off, Math.min(pcm.length, off + SAMPLE_RATE));
-        const ab = new AudioBuffer({ length: chunk.length, sampleRate: SAMPLE_RATE, numberOfChannels: 1 });
+        const ab = new AudioBuffer({
+          length: chunk.length,
+          sampleRate: SAMPLE_RATE,
+          numberOfChannels: 1,
+        });
         ab.copyToChannel(chunk, 0);
         await audioSource.add(ab);
       }
@@ -168,7 +204,10 @@ for (const [name, lesson] of Object.entries(scripts)) {
         const frames = Math.ceil(total * fps);
         for (let f = 0; f < frames; f++) {
           const t = f / fps;
-          const idx = Math.max(0, slideTimes.findIndex((s) => t >= s.start && t < s.end));
+          const idx = Math.max(
+            0,
+            slideTimes.findIndex((s) => t >= s.start && t < s.end),
+          );
           const slide = lesson.slides[idx === -1 ? lesson.slides.length - 1 : idx];
           const g = ctx.createLinearGradient(0, 0, 1280, 720);
           g.addColorStop(0, '#1e1b4b');
@@ -184,7 +223,8 @@ for (const [name, lesson] of Object.entries(scripts)) {
           ctx.font = '400 32px sans-serif';
           ctx.fillStyle = '#e0e7ff';
           y += 10;
-          for (const b of slide.bullets ?? []) y = wrap(`•  ${b}`, 80, y, slide.code ? 520 : 1100, 44) + 6;
+          for (const b of slide.bullets ?? [])
+            y = wrap(`•  ${b}`, 80, y, slide.code ? 520 : 1100, 44) + 6;
           if (slide.code) {
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(640, 200, 576, 380);
@@ -206,14 +246,17 @@ for (const [name, lesson] of Object.entries(scripts)) {
       await output.finalize();
       const bytes = new Uint8Array(output.target.buffer);
       let s = '';
-      for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      for (let i = 0; i < bytes.length; i += 0x8000)
+        s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
       return btoa(s);
     },
     { lesson, total, slideTimes, pcmBase64, SAMPLE_RATE },
   );
   const file = join(outDir, `${name}.webm`);
   writeFileSync(file, Buffer.from(b64, 'base64'));
-  console.log(`  wrote ${file} (${(Buffer.from(b64, 'base64').length / 1024).toFixed(0)} KiB, ${total.toFixed(1)} s)`);
+  console.log(
+    `  wrote ${file} (${(Buffer.from(b64, 'base64').length / 1024).toFixed(0)} KiB, ${total.toFixed(1)} s)`,
+  );
 }
 await browser.close();
 if (existsSync(tmp)) rmSync(tmp, { recursive: true, force: true });

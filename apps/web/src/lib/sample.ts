@@ -2,7 +2,14 @@
  * Clearly labelled sample data for demonstrations. Every record has provenance 'sample_data',
  * the UI shows a "Sample data" badge, and one click removes all of it.
  */
-import type { LearningSession, LearningSource, Project, ProjectWorkSession, AssessmentRecord, GithubMilestone } from '@skilltrace/shared';
+import type {
+  LearningSession,
+  LearningSource,
+  Project,
+  ProjectWorkSession,
+  AssessmentRecord,
+  GithubMilestone,
+} from '@skilltrace/shared';
 import { PRIVATE_COLLECTIONS, envelope, hash53, pageIdFromUrl } from '@skilltrace/shared';
 import type { DataStore } from './store';
 import type { AppData } from './app-context';
@@ -11,11 +18,35 @@ const H = 3_600_000;
 
 export async function loadSampleData(store: DataStore, now = Date.now()) {
   const uid = store.uid;
-  const day = (n: number, hour = 18) => Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth(), new Date(now).getUTCDate() - n, hour);
+  const day = (n: number, hour = 18) =>
+    Date.UTC(
+      new Date(now).getUTCFullYear(),
+      new Date(now).getUTCMonth(),
+      new Date(now).getUTCDate() - n,
+      hour,
+    );
   const sources: [string, string, LearningSource['contentType'], string, string[]][] = [
-    ['https://example.org/sample/python-classes', 'Sample: Python Classes and Objects', 'reading', 'Python', ['Classes', 'Object-Oriented Programming']],
-    ['https://example.org/sample/sql-joins', 'Sample: SQL Joins Explained', 'video', 'SQL', ['Joins', 'Inner Join', 'Left Join']],
-    ['https://example.org/sample/ml-intro', 'Sample: Intro to Supervised Learning', 'video', 'Machine Learning', ['Supervised Learning', 'Regression']],
+    [
+      'https://example.org/sample/python-classes',
+      'Sample: Python Classes and Objects',
+      'reading',
+      'Python',
+      ['Classes', 'Object-Oriented Programming'],
+    ],
+    [
+      'https://example.org/sample/sql-joins',
+      'Sample: SQL Joins Explained',
+      'video',
+      'SQL',
+      ['Joins', 'Inner Join', 'Left Join'],
+    ],
+    [
+      'https://example.org/sample/ml-intro',
+      'Sample: Intro to Supervised Learning',
+      'video',
+      'Machine Learning',
+      ['Supervised Learning', 'Regression'],
+    ],
   ];
   for (const [i, [url, title, type, skill, topics]] of sources.entries()) {
     const sid = `sample_src_${i}`;
@@ -122,7 +153,8 @@ export async function removeSampleData(store: DataStore, data: AppData) {
     for (const row of data[c] as { id: string; provenance: string }[]) {
       // Sample work sessions must carry 'self_reported' provenance (project-time rule), so
       // sample records are also recognised by their reserved id prefix.
-      if (row.provenance === 'sample_data' || row.id.startsWith('sample_')) await store.remove(c, row.id);
+      if (row.provenance === 'sample_data' || row.id.startsWith('sample_'))
+        await store.remove(c, row.id);
     }
   }
 }

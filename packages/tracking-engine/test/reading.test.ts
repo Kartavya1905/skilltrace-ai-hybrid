@@ -65,7 +65,10 @@ describe('reading engagement checks', () => {
     log.reading('scroll', 240, { scrollRatio: 0.7 });
     log.reading('section_visible', 300, { sectionId: 'c' });
     log.reading('checkpoint', 360);
-    const s = replayReading(log.events as never, defaultReadingConfig(1500, sections, 150)).summary();
+    const s = replayReading(
+      log.events as never,
+      defaultReadingConfig(1500, sections, 150),
+    ).summary();
     expect(s.creditedMs).toBe(6 * MIN);
     expect(s.progressRatio).toBe(1);
   });
@@ -83,8 +86,24 @@ describe('reading engagement checks', () => {
     const t = new ReadingTracker(defaultReadingConfig(3000, [], 238));
     const base = 1_000_000;
     t.apply({ id: '1', sessionId: 's', seq: 1, t: base, kind: 'reading', type: 'open' });
-    t.apply({ id: '2', sessionId: 's', seq: 2, t: base + 1000, kind: 'reading', type: 'scroll', scrollRatio: 0.05 });
-    t.apply({ id: '3', sessionId: 's', seq: 3, t: base + 6000, kind: 'reading', type: 'scroll', scrollRatio: 0.9 });
+    t.apply({
+      id: '2',
+      sessionId: 's',
+      seq: 2,
+      t: base + 1000,
+      kind: 'reading',
+      type: 'scroll',
+      scrollRatio: 0.05,
+    });
+    t.apply({
+      id: '3',
+      sessionId: 's',
+      seq: 3,
+      t: base + 6000,
+      kind: 'reading',
+      type: 'scroll',
+      scrollRatio: 0.9,
+    });
     expect(t.dueCheck(base + 6000)).toBe('rapid_scroll');
   });
 
@@ -94,7 +113,10 @@ describe('reading engagement checks', () => {
     log.engagement('check_issued', 60, 'q1');
     log.engagement('check_responded', 90, 'q1', true);
     log.reading('checkpoint', 150);
-    const s = replayReading(log.events as never, defaultReadingConfig(1500, sections, 150)).summary();
+    const s = replayReading(
+      log.events as never,
+      defaultReadingConfig(1500, sections, 150),
+    ).summary();
     expect(s.creditedMs).toBe(2 * MIN); // 0-60 and 90-150; the 30 s question window is not credited
     expect(s.answersCorrect).toBe(1);
   });
@@ -106,7 +128,10 @@ describe('reading engagement checks', () => {
       log.engagement('check_issued', 60, 'q1');
       log.engagement('check_responded', 70, 'q1', correct);
       log.reading('checkpoint', 130);
-      return replayReading(log.events as never, defaultReadingConfig(1500, sections, 150)).summary();
+      return replayReading(
+        log.events as never,
+        defaultReadingConfig(1500, sections, 150),
+      ).summary();
     };
     const right = run(true);
     const wrong = run(false);
@@ -148,16 +173,33 @@ describe('reading engagement checks', () => {
     log.engagement('check_responded', t + 5, 'ok', false);
     log.engagement('check_issued', t + 10, 'm5');
     log.engagement('check_missed', t + 70, 'm5');
-    const s = replayReading(log.events as never, defaultReadingConfig(1500, sections, 150)).summary();
+    const s = replayReading(
+      log.events as never,
+      defaultReadingConfig(1500, sections, 150),
+    ).summary();
     expect(s.resets).toBe(0);
     expect(s.consecutiveMissed).toBe(1);
   });
 
   it('a page reset leaves other pages unchanged', () => {
     const credits = pageCreditedMs([
-      { sessionId: 'p1-a', pageId: 'p1', creditedMs: 5 * MIN, resets: 0, lastResetAt: null, endedAt: 100 },
+      {
+        sessionId: 'p1-a',
+        pageId: 'p1',
+        creditedMs: 5 * MIN,
+        resets: 0,
+        lastResetAt: null,
+        endedAt: 100,
+      },
       { sessionId: 'p1-b', pageId: 'p1', creditedMs: 0, resets: 1, lastResetAt: 200, endedAt: 250 },
-      { sessionId: 'p2-a', pageId: 'p2', creditedMs: 7 * MIN, resets: 0, lastResetAt: null, endedAt: 220 },
+      {
+        sessionId: 'p2-a',
+        pageId: 'p2',
+        creditedMs: 7 * MIN,
+        resets: 0,
+        lastResetAt: null,
+        endedAt: 220,
+      },
     ]);
     expect(credits.get('p1')).toBe(0);
     expect(credits.get('p2')).toBe(7 * MIN);
@@ -169,7 +211,10 @@ describe('reading engagement checks', () => {
     log.reading('section_visible', 60, { sectionId: 'b' });
     log.reading('section_visible', 120, { sectionId: 'c' });
     log.reading('section_visible', 180, { sectionId: 'a' });
-    const s = replayReading(log.events as never, defaultReadingConfig(1500, sections, 150)).summary();
+    const s = replayReading(
+      log.events as never,
+      defaultReadingConfig(1500, sections, 150),
+    ).summary();
     expect(s.revisits).toBe(1);
   });
 
@@ -182,7 +227,10 @@ describe('reading engagement checks', () => {
     log.reading('section_visible', 400, { sectionId: 'c' });
     log.reading('scroll', 500, { scrollRatio: 0.9 });
     log.reading('checkpoint', 600);
-    const s = replayReading(log.events as never, defaultReadingConfig(1500, sections, 238)).summary();
+    const s = replayReading(
+      log.events as never,
+      defaultReadingConfig(1500, sections, 238),
+    ).summary();
     expect(s.credible).toBe(true);
     expect(s.observedWpm).toBe(150);
   });

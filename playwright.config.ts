@@ -9,7 +9,8 @@ import { join } from 'node:path';
  * (Google Chrome builds no longer allow --load-extension, so the extension test needs Chromium.)
  */
 const cached = join(homedir(), 'AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe');
-export const chromiumPath = process.env.PW_CHROMIUM_PATH ?? (existsSync(cached) ? cached : undefined);
+export const chromiumPath =
+  process.env.PW_CHROMIUM_PATH ?? (existsSync(cached) ? cached : undefined);
 
 export default defineConfig({
   testDir: 'tests/e2e',

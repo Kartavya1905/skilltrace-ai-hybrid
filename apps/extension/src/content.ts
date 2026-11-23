@@ -28,10 +28,15 @@ const CHUNK_WORDS = 150;
 
 function trackingOptions(s: ExtensionSettings): TrackingOptions {
   return {
-    videoVerification: { ...(s.demoMode ? DEMO_VIDEO_VERIFICATION : PRODUCTION_VIDEO_VERIFICATION), rng: Math.random },
+    videoVerification: {
+      ...(s.demoMode ? DEMO_VIDEO_VERIFICATION : PRODUCTION_VIDEO_VERIFICATION),
+      rng: Math.random,
+    },
     creditHiddenVideo: s.creditHiddenVideo,
     readingWpm: s.readingWpm,
-    readingRandomCheck: s.demoMode ? { minMs: 45_000, maxMs: 90_000, rng: Math.random } : { minMs: 4 * 60_000, maxMs: 12 * 60_000, rng: Math.random },
+    readingRandomCheck: s.demoMode
+      ? { minMs: 45_000, maxMs: 90_000, rng: Math.random }
+      : { minMs: 4 * 60_000, maxMs: 12 * 60_000, rng: Math.random },
     responseWindowMultiplier: s.responseWindowMultiplier,
     initialConsecutiveMissed: 0,
   };
@@ -39,13 +44,20 @@ function trackingOptions(s: ExtensionSettings): TrackingOptions {
 
 /** Main readable content, skipping navigation, forms and editable regions. */
 function mainContainer(): HTMLElement {
-  return (document.querySelector('main article, article, main, [role="main"]') as HTMLElement | null) ?? document.body;
+  return (
+    (document.querySelector('main article, article, main, [role="main"]') as HTMLElement | null) ??
+    document.body
+  );
 }
 
 function readableBlocks(root: HTMLElement): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>('p, li, pre, blockquote, h1, h2, h3, h4, td')).filter(
+  return Array.from(
+    root.querySelectorAll<HTMLElement>('p, li, pre, blockquote, h1, h2, h3, h4, td'),
+  ).filter(
     (el) =>
-      !el.closest('nav, header, footer, aside, form, [contenteditable="true"], input, textarea, select, [aria-hidden="true"]') &&
+      !el.closest(
+        'nav, header, footer, aside, form, [contenteditable="true"], input, textarea, select, [aria-hidden="true"]',
+      ) &&
       el.offsetParent !== null &&
       (el.innerText ?? '').trim().length > 0,
   );
@@ -60,7 +72,11 @@ function chunkBlocks(blocks: HTMLElement[]) {
     const words = countWords(b.innerText);
     const isHeading = /^H[1-4]$/.test(b.tagName);
     if (!current || isHeading || current.words >= CHUNK_WORDS) {
-      current = { id: `s${sections.length}`, heading: isHeading ? b.innerText.trim().slice(0, 200) : '', words: 0 };
+      current = {
+        id: `s${sections.length}`,
+        heading: isHeading ? b.innerText.trim().slice(0, 200) : '',
+        words: 0,
+      };
       sections.push(current);
     }
     current.words += words;
@@ -116,7 +132,11 @@ function showCheck(check: CheckRequest, onRespond: () => void): () => void {
   btn.addEventListener('click', onRespond);
   document.documentElement.appendChild(host);
   btn.focus();
-  const t = setInterval(() => (left.textContent = `${Math.max(0, Math.ceil((check.expiresAt - Date.now()) / 1000))}s left`), 500);
+  const t = setInterval(
+    () =>
+      (left.textContent = `${Math.max(0, Math.ceil((check.expiresAt - Date.now()) / 1000))}s left`),
+    500,
+  );
   return () => {
     clearInterval(t);
     host.remove();
@@ -127,12 +147,16 @@ async function main() {
   if (window.top !== window) return; // top frame only
   if (document.querySelector('meta[name="skilltrace:first-party-tracking"]')) return; // dashboard tracks itself
   const settings = await send<ExtensionSettings>({ type: 'getSettings' });
-  if (!settings?.trackingEnabled || settings.paused || !settings.origins.includes(location.origin)) return;
+  if (!settings?.trackingEnabled || settings.paused || !settings.origins.includes(location.origin))
+    return;
   const opts = trackingOptions(settings);
   const queue = makeQueue();
   const started = new WeakSet<HTMLMediaElement>();
 
-  const baseMeta = (contentType: SessionMeta['contentType'], extra: Partial<SessionMeta>): SessionMeta => ({
+  const baseMeta = (
+    contentType: SessionMeta['contentType'],
+    extra: Partial<SessionMeta>,
+  ): SessionMeta => ({
     sessionId: randomId('ext'),
     pageId: pageIdFromUrl(location.href),
     origin: location.origin,
@@ -148,7 +172,11 @@ async function main() {
     ...extra,
   });
 
-  function run(meta: SessionMeta, attach: (s: TrackedSession) => () => void, media?: HTMLMediaElement) {
+  function run(
+    meta: SessionMeta,
+    attach: (s: TrackedSession) => () => void,
+    media?: HTMLMediaElement,
+  ) {
     let hide: (() => void) | null = null;
     const session = new TrackedSession(meta, opts, {
       persist: (e) => queue.push(e),
@@ -176,17 +204,26 @@ async function main() {
   function trackMedia(el: HTMLMediaElement) {
     if (started.has(el)) return;
     const begin = () => {
-      if (started.has(el) || !Number.isFinite(el.duration) || el.duration < MIN_MEDIA_SECONDS) return;
+      if (started.has(el) || !Number.isFinite(el.duration) || el.duration < MIN_MEDIA_SECONDS)
+        return;
       started.add(el);
       const kind = el instanceof HTMLVideoElement ? 'video' : 'audio';
       const captions = Array.from(el.querySelectorAll('track'))
         .map((t) => t.label)
         .join(', ');
-      run(baseMeta(kind, { durationSec: el.duration, excerpt: `${captions}\n${excerpt}`.trim().slice(0, 1500) }), (s) => {
-        // Media may already be playing when we attach.
-        if (!el.paused) s.media('play', { pos: el.currentTime, rate: el.playbackRate, duration: el.duration });
-        return bindMediaElement(el, s);
-      }, el);
+      run(
+        baseMeta(kind, {
+          durationSec: el.duration,
+          excerpt: `${captions}\n${excerpt}`.trim().slice(0, 1500),
+        }),
+        (s) => {
+          // Media may already be playing when we attach.
+          if (!el.paused)
+            s.media('play', { pos: el.currentTime, rate: el.playbackRate, duration: el.duration });
+          return bindMediaElement(el, s);
+        },
+        el,
+      );
     };
     if (el.readyState >= 1) begin();
     el.addEventListener('loadedmetadata', begin);
@@ -198,7 +235,8 @@ async function main() {
     for (const r of records)
       r.addedNodes.forEach((n) => {
         if (n instanceof HTMLMediaElement) trackMedia(n);
-        else if (n instanceof HTMLElement) n.querySelectorAll('video, audio').forEach((m) => trackMedia(m as HTMLMediaElement));
+        else if (n instanceof HTMLElement)
+          n.querySelectorAll('video, audio').forEach((m) => trackMedia(m as HTMLMediaElement));
       });
   }).observe(document.documentElement, { childList: true, subtree: true });
 

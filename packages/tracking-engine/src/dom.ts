@@ -10,11 +10,19 @@ import type { TrackedSession } from './session';
 const CHECKPOINT_MS = 2_000;
 
 /** Attach to an HTML5 <video> or <audio> element. Returns a detach function. */
-export function bindMediaElement(el: HTMLMediaElement, session: TrackedSession, doc: Document = document): () => void {
+export function bindMediaElement(
+  el: HTMLMediaElement,
+  session: TrackedSession,
+  doc: Document = document,
+): () => void {
   let lastPos = el.currentTime;
   let lastPosT = Date.now();
   let lastCheckpoint = 0;
-  const snap = () => ({ pos: el.currentTime, rate: el.playbackRate || 1, duration: Number.isFinite(el.duration) ? el.duration : 0 });
+  const snap = () => ({
+    pos: el.currentTime,
+    rate: el.playbackRate || 1,
+    duration: Number.isFinite(el.duration) ? el.duration : 0,
+  });
   const on = (type: string, fn: () => void) => {
     el.addEventListener(type, fn);
     return () => el.removeEventListener(type, fn);
@@ -77,7 +85,11 @@ export interface ReadingBindingOptions {
   sectionIdOf?: (el: Element) => string | undefined;
 }
 
-export function bindReading(session: TrackedSession, opts: ReadingBindingOptions, doc: Document = document): () => void {
+export function bindReading(
+  session: TrackedSession,
+  opts: ReadingBindingOptions,
+  doc: Document = document,
+): () => void {
   const visibleRatio = opts.visibleRatio ?? 0.5;
   const wpm = opts.wpm ?? 238;
   const dwellShare = opts.dwellShare ?? 0.3;
@@ -98,11 +110,16 @@ export function bindReading(session: TrackedSession, opts: ReadingBindingOptions
       ? new IntersectionObserver(
           (entries) => {
             for (const entry of entries) {
-              const id = opts.sectionIdOf?.(entry.target) ?? (entry.target as HTMLElement).dataset.sectionId;
+              const id =
+                opts.sectionIdOf?.(entry.target) ?? (entry.target as HTMLElement).dataset.sectionId;
               if (!id) continue;
               const vh = entry.rootBounds?.height ?? window.innerHeight;
               const coversViewport = entry.intersectionRect.height >= vh * visibleRatio;
-              if (entry.isIntersecting && (entry.intersectionRatio >= visibleRatio || coversViewport)) visibleEls.set(entry.target, id);
+              if (
+                entry.isIntersecting &&
+                (entry.intersectionRatio >= visibleRatio || coversViewport)
+              )
+                visibleEls.set(entry.target, id);
               else visibleEls.delete(entry.target);
             }
           },

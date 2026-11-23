@@ -16,16 +16,38 @@ const origins = (process.env.SKILLTRACE_DASHBOARD_ORIGINS ?? 'http://localhost:5
   .map((o) => o.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 for (const o of origins) {
-  if (!/^https?:\/\/[^*/]+$/.test(o)) throw new Error(`Invalid dashboard origin "${o}" (no wildcards or paths).`);
+  if (!/^https?:\/\/[^*/]+$/.test(o))
+    throw new Error(`Invalid dashboard origin "${o}" (no wildcards or paths).`);
 }
 
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 
-const common = { bundle: true, minify: false, sourcemap: true, target: 'chrome120', logLevel: 'info' };
-await build({ ...common, entryPoints: [join(here, 'src/background.ts')], outfile: join(dist, 'background.js'), format: 'esm' });
-await build({ ...common, entryPoints: [join(here, 'src/content.ts')], outfile: join(dist, 'content.js'), format: 'iife' });
-await build({ ...common, entryPoints: [join(here, 'src/popup.ts')], outfile: join(dist, 'popup.js'), format: 'iife' });
+const common = {
+  bundle: true,
+  minify: false,
+  sourcemap: true,
+  target: 'chrome120',
+  logLevel: 'info',
+};
+await build({
+  ...common,
+  entryPoints: [join(here, 'src/background.ts')],
+  outfile: join(dist, 'background.js'),
+  format: 'esm',
+});
+await build({
+  ...common,
+  entryPoints: [join(here, 'src/content.ts')],
+  outfile: join(dist, 'content.js'),
+  format: 'iife',
+});
+await build({
+  ...common,
+  entryPoints: [join(here, 'src/popup.ts')],
+  outfile: join(dist, 'popup.js'),
+  format: 'iife',
+});
 
 const pkg = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
 const manifest = JSON.parse(readFileSync(join(here, 'manifest.json'), 'utf8'));

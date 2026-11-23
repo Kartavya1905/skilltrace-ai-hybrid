@@ -12,11 +12,18 @@ import { chromiumPath } from '../../playwright.config';
 const extDir = resolve('apps/extension/dist');
 
 test('extension tracks an approved page and hands sessions to the dashboard', async () => {
-  execFileSync(process.execPath, ['apps/extension/build.mjs'], { env: { ...process.env, SKILLTRACE_E2E: '1' }, stdio: 'ignore' });
+  execFileSync(process.execPath, ['apps/extension/build.mjs'], {
+    env: { ...process.env, SKILLTRACE_E2E: '1' },
+    stdio: 'ignore',
+  });
   const ctx = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), 'st-ext-')), {
     executablePath: chromiumPath,
     headless: true,
-    args: [`--disable-extensions-except=${extDir}`, `--load-extension=${extDir}`, '--autoplay-policy=no-user-gesture-required'],
+    args: [
+      `--disable-extensions-except=${extDir}`,
+      `--load-extension=${extDir}`,
+      '--autoplay-policy=no-user-gesture-required',
+    ],
   });
   try {
     const sw = ctx.serviceWorkers()[0] ?? (await ctx.waitForEvent('serviceworker'));
@@ -26,8 +33,14 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
     const popup = await ctx.newPage();
     await popup.goto(`chrome-extension://${extId}/popup.html`);
     await popup.evaluate(async () => {
-      await chrome.runtime.sendMessage({ type: 'updateSettings', patch: { trackingEnabled: true } });
-      const r = await chrome.runtime.sendMessage({ type: 'addOrigin', origin: 'http://localhost:5310' });
+      await chrome.runtime.sendMessage({
+        type: 'updateSettings',
+        patch: { trackingEnabled: true },
+      });
+      const r = await chrome.runtime.sendMessage({
+        type: 'addOrigin',
+        origin: 'http://localhost:5310',
+      });
       if (!r.ok) throw new Error(JSON.stringify(r));
     });
 
@@ -48,20 +61,38 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
 
     const dash = await ctx.newPage();
     await dash.goto('http://localhost:5310/');
-    await expect.poll(async () => {
-      return dash.evaluate(
-        (id) =>
-          new Promise<number>((res) =>
-            (globalThis as unknown as { chrome: typeof chrome }).chrome.runtime.sendMessage(id, { type: 'skilltrace.status' }, (r: { pendingSessions: number }) => res(r?.pendingSessions ?? -1)),
-          ),
-        extId,
-      );
-    }, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
+    await expect
+      .poll(
+        async () => {
+          return dash.evaluate(
+            (id) =>
+              new Promise<number>((res) =>
+                (globalThis as unknown as { chrome: typeof chrome }).chrome.runtime.sendMessage(
+                  id,
+                  { type: 'skilltrace.status' },
+                  (r: { pendingSessions: number }) => res(r?.pendingSessions ?? -1),
+                ),
+              ),
+            extId,
+          );
+        },
+        { timeout: 15_000 },
+      )
+      .toBeGreaterThanOrEqual(1);
 
     const pulled = await dash.evaluate(
       (id) =>
-        new Promise<{ meta: { contentType: string; origin: string; url: string }; events: { kind: string; type: string }[] }[]>((res) =>
-          (globalThis as unknown as { chrome: typeof chrome }).chrome.runtime.sendMessage(id, { type: 'skilltrace.pull' }, (r: { sessions: never[] }) => res(r.sessions)),
+        new Promise<
+          {
+            meta: { contentType: string; origin: string; url: string };
+            events: { kind: string; type: string }[];
+          }[]
+        >((res) =>
+          (globalThis as unknown as { chrome: typeof chrome }).chrome.runtime.sendMessage(
+            id,
+            { type: 'skilltrace.pull' },
+            (r: { sessions: never[] }) => res(r.sessions),
+          ),
         ),
       extId,
     );
@@ -78,6 +109,9 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
   } finally {
     await ctx.close();
     // Restore the normal build (without the test-only host permission).
-    execFileSync(process.execPath, ['apps/extension/build.mjs'], { env: { ...process.env, SKILLTRACE_E2E: '' }, stdio: 'ignore' });
+    execFileSync(process.execPath, ['apps/extension/build.mjs'], {
+      env: { ...process.env, SKILLTRACE_E2E: '' },
+      stdio: 'ignore',
+    });
   }
 });

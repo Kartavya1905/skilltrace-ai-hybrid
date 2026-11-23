@@ -5,7 +5,12 @@
     "slides": [
       {
         "heading": "Python Functions in Practice",
-        "bullets": ["Define with def", "Parameters and arguments", "Return values", "Variable scope"],
+        "bullets": [
+          "Define with def",
+          "Parameters and arguments",
+          "Return values",
+          "Variable scope"
+        ],
         "narration": [
           "Welcome to this short lesson on Python functions.",
           "We will cover how to define a function, how parameters and arguments work, what return values are, and how variable scope decides where a name can be seen."
@@ -23,7 +28,11 @@
       },
       {
         "heading": "Parameters and arguments",
-        "bullets": ["Parameters: names in the definition", "Arguments: values in the call", "Defaults: height=1"],
+        "bullets": [
+          "Parameters: names in the definition",
+          "Arguments: values in the call",
+          "Defaults: height=1"
+        ],
         "code": "def area(width, height=1):\n    return width * height\n\narea(3, 4)   # 12\narea(5)      # 5",
         "narration": [
           "Parameters are the names inside the parentheses of the definition. Arguments are the values you pass when you call it.",
@@ -53,7 +62,11 @@
       },
       {
         "heading": "Recap",
-        "bullets": ["Small, named, reusable", "Clear inputs and outputs", "Avoid hidden global state"],
+        "bullets": [
+          "Small, named, reusable",
+          "Clear inputs and outputs",
+          "Avoid hidden global state"
+        ],
         "narration": [
           "To recap: functions give logic a name, take inputs through parameters, and hand results back with return.",
           "Keep them small and avoid changing global state, and they will be easy to reuse and test. Thanks for watching."

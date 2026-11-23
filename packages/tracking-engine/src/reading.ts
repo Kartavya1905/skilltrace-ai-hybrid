@@ -46,7 +46,11 @@ export function countWords(text: string): number {
   return matches ? matches.length : 0;
 }
 
-export function defaultReadingConfig(wordCount: number, sections: ReadingSection[], wpm = DEFAULT_BASELINE_WPM): ReadingConfig {
+export function defaultReadingConfig(
+  wordCount: number,
+  sections: ReadingSection[],
+  wpm = DEFAULT_BASELINE_WPM,
+): ReadingConfig {
   // Idle allowance: the longest section's expected time, bounded to 1-5 minutes.
   const longest = sections.reduce((m, s) => Math.max(m, s.words), 0);
   const idleLimitMs = Math.min(300_000, Math.max(60_000, expectedReadingMs(longest, wpm) * 1.5));
@@ -63,7 +67,8 @@ export function defaultReadingConfig(wordCount: number, sections: ReadingSection
   };
 }
 
-export type CheckTrigger = 'rapid_scroll' | 'inactivity' | 'implausible_progress' | 'random' | 'user_requested';
+export type CheckTrigger =
+  'rapid_scroll' | 'inactivity' | 'implausible_progress' | 'random' | 'user_requested';
 
 export interface ReadingAuditEntry {
   t: number;
@@ -195,7 +200,8 @@ export class ReadingTracker {
   private progressWords(): number {
     let words = 0;
     for (const sec of this.config.sections) if (this.s.sectionsSeen.has(sec.id)) words += sec.words;
-    if (this.config.sections.length === 0) words = Math.round(this.s.maxScrollRatio * this.config.wordCount);
+    if (this.config.sections.length === 0)
+      words = Math.round(this.s.maxScrollRatio * this.config.wordCount);
     return Math.min(words, this.config.wordCount);
   }
 
@@ -233,9 +239,12 @@ export class ReadingTracker {
           if (this.s.sectionsSeen.has(e.sectionId)) {
             // Returning to an earlier section after reading further counts as a revisit.
             const furthest = Math.max(
-              ...this.s.sectionOrder.map((id) => this.config.sections.findIndex((s) => s.id === id)),
+              ...this.s.sectionOrder.map((id) =>
+                this.config.sections.findIndex((s) => s.id === id),
+              ),
             );
-            if (idx >= 0 && idx < furthest && this.s.sectionOrder.at(-1) !== e.sectionId) this.s.revisits += 1;
+            if (idx >= 0 && idx < furthest && this.s.sectionOrder.at(-1) !== e.sectionId)
+              this.s.revisits += 1;
           } else {
             this.s.sectionsSeen.add(e.sectionId);
           }
@@ -286,14 +295,22 @@ export class ReadingTracker {
         if (e.correct === false) this.s.answersIncorrect += 1;
         this.markActivity(e.t);
         this.s.nextRandomAtMs = this.drawRandom(this.s.creditedMs);
-        this.s.audit.push({ t: e.t, type: 'check_responded', detail: `${e.checkId}:${String(e.correct)}` });
+        this.s.audit.push({
+          t: e.t,
+          type: 'check_responded',
+          detail: `${e.checkId}:${String(e.correct)}`,
+        });
         break;
       case 'check_missed':
         if (this.s.pendingCheck?.checkId !== e.checkId) break;
         this.s.pendingCheck = null;
         this.s.checksMissed += 1;
         this.s.consecutiveMissed += 1;
-        this.s.audit.push({ t: e.t, type: 'check_missed', detail: `${e.checkId}:${this.s.consecutiveMissed}` });
+        this.s.audit.push({
+          t: e.t,
+          type: 'check_missed',
+          detail: `${e.checkId}:${this.s.consecutiveMissed}`,
+        });
         if (this.s.consecutiveMissed >= this.config.missLimit) this.resetPage(e.t);
         this.s.nextRandomAtMs = this.drawRandom(this.s.creditedMs);
         break;
@@ -324,13 +341,15 @@ export class ReadingTracker {
       const last = recent[recent.length - 1]!;
       const minutes = Math.max((last.t - first.t) / 60_000, 1 / 60);
       const words = Math.abs(last.ratio - first.ratio) * this.config.wordCount;
-      if (words >= 150 && words / minutes > this.config.wpm * this.config.rapidScrollFactor) return 'rapid_scroll';
+      if (words >= 150 && words / minutes > this.config.wpm * this.config.rapidScrollFactor)
+        return 'rapid_scroll';
     }
     // Implausible progress: far more words "seen" than the credited time allows.
     const seen = this.progressWords();
     const creditedMin = this.s.creditedMs / 60_000;
     if (seen >= this.config.wordCount * 0.3 && this.s.creditedMs >= 30_000) {
-      if (seen / creditedMin > this.config.wpm * (this.config.rapidScrollFactor + 1)) return 'implausible_progress';
+      if (seen / creditedMin > this.config.wpm * (this.config.rapidScrollFactor + 1))
+        return 'implausible_progress';
     }
     if (this.s.focused && this.s.creditedMs >= this.s.nextRandomAtMs) return 'random';
     return null;
@@ -385,7 +404,10 @@ export class ReadingTracker {
   }
 }
 
-export function replayReading(events: readonly (ReadingEvent | EngagementEvent)[], config: ReadingConfig): ReadingTracker {
+export function replayReading(
+  events: readonly (ReadingEvent | EngagementEvent)[],
+  config: ReadingConfig,
+): ReadingTracker {
   const tracker = new ReadingTracker(config);
   const unique = new Map<string, ReadingEvent | EngagementEvent>();
   for (const e of events) if (!unique.has(e.id)) unique.set(e.id, e);

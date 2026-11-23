@@ -4,7 +4,16 @@ import { formatDuration } from '@skilltrace/shared';
 import { skillDefinition } from '@skilltrace/skill-taxonomy';
 import { useApp } from '../../lib/app-context';
 import { skillAssessments, skillProjects, skillTimelines } from '../../lib/analytics';
-import { Badge, Bars, Button, Card, EmptyState, PageHeader, SourceBadge, Stat } from '../../components/ui';
+import {
+  Badge,
+  Bars,
+  Button,
+  Card,
+  EmptyState,
+  PageHeader,
+  SourceBadge,
+  Stat,
+} from '../../components/ui';
 
 type Period = 'daily' | 'weekly' | 'monthly';
 
@@ -29,7 +38,9 @@ export default function SkillDetail() {
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-12)
     .map(([label, value]) => ({ label: period === 'daily' ? label.slice(5) : label, value }));
-  const sessions = data.learning_sessions.filter((s) => s.attributions.some((a) => a.skill === skill)).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const sessions = data.learning_sessions
+    .filter((s) => s.attributions.some((a) => a.skill === skill))
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   const projects = skillProjects(data, skill);
   const assessments = skillAssessments(data, skill);
 
@@ -49,12 +60,36 @@ export default function SkillDetail() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={skill} subtitle={def ? `${def.category} · subskills: ${def.subskills.join(', ')}` : 'Custom skill'} actions={<Link className="text-sm text-indigo-700 hover:underline" to="/app/skills">All skills</Link>} />
+      <PageHeader
+        title={skill}
+        subtitle={def ? `${def.category} · subskills: ${def.subskills.join(', ')}` : 'Custom skill'}
+        actions={
+          <Link className="text-sm text-indigo-700 hover:underline" to="/app/skills">
+            All skills
+          </Link>
+        }
+      />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Eligible learning" value={formatDuration(tl.attributedMs)} hint="Attributed share of each session" />
-        <Stat label="Involved time" value={formatDuration(tl.involvedMs)} hint={`Incl. ${formatDuration(tl.sharedMs)} shared with other skills`} />
-        <Stat label="Raw recorded" value={formatDuration(tl.rawMs)} hint={`Unverified: ${formatDuration(tl.unverifiedMs)}`} />
-        <Stat label="Revision" value={formatDuration(tl.revisionMs)} hint={`${tl.sessionCount} sessions · ${tl.sourceIds.length} sources`} />
+        <Stat
+          label="Eligible learning"
+          value={formatDuration(tl.attributedMs)}
+          hint="Attributed share of each session"
+        />
+        <Stat
+          label="Involved time"
+          value={formatDuration(tl.involvedMs)}
+          hint={`Incl. ${formatDuration(tl.sharedMs)} shared with other skills`}
+        />
+        <Stat
+          label="Raw recorded"
+          value={formatDuration(tl.rawMs)}
+          hint={`Unverified: ${formatDuration(tl.unverifiedMs)}`}
+        />
+        <Stat
+          label="Revision"
+          value={formatDuration(tl.revisionMs)}
+          hint={`${tl.sessionCount} sessions · ${tl.sourceIds.length} sources`}
+        />
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <Card
@@ -63,7 +98,14 @@ export default function SkillDetail() {
           action={
             <div className="flex gap-1" role="tablist" aria-label="Period">
               {(['daily', 'weekly', 'monthly'] as const).map((p) => (
-                <button key={p} role="tab" aria-selected={period === p} type="button" onClick={() => setPeriod(p)} className={`rounded px-2 py-1 text-xs ${period === p ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                <button
+                  key={p}
+                  role="tab"
+                  aria-selected={period === p}
+                  type="button"
+                  onClick={() => setPeriod(p)}
+                  className={`rounded px-2 py-1 text-xs ${period === p ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                >
                   {p}
                 </button>
               ))}
@@ -102,7 +144,10 @@ export default function SkillDetail() {
               {assessments.map((a) => (
                 <li key={a.id} className="flex justify-between">
                   <span>
-                    {a.title} <span className="text-xs text-slate-500">({new Date(a.attemptedAt).toLocaleDateString()})</span>
+                    {a.title}{' '}
+                    <span className="text-xs text-slate-500">
+                      ({new Date(a.attemptedAt).toLocaleDateString()})
+                    </span>
                   </span>
                   <Badge tone="green">
                     {a.score}/{a.maxScore}
@@ -112,7 +157,10 @@ export default function SkillDetail() {
             </ul>
           ) : (
             <p className="text-sm text-slate-500">
-              None. <Link className="text-indigo-700 underline" to="/app/assessments">Take one</Link>
+              None.{' '}
+              <Link className="text-indigo-700 underline" to="/app/assessments">
+                Take one
+              </Link>
             </p>
           )}
         </Card>
@@ -128,7 +176,10 @@ export default function SkillDetail() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">No confirmed projects use this skill. Project time never changes this skill's learning time.</p>
+            <p className="text-sm text-slate-500">
+              No confirmed projects use this skill. Project time never changes this skill's learning
+              time.
+            </p>
           )}
         </Card>
       </div>
@@ -141,21 +192,35 @@ export default function SkillDetail() {
               <li key={s.id} className="flex flex-wrap justify-between gap-2 py-2">
                 <span>{src?.title ?? s.sourceId}</span>
                 <span className="text-slate-500">
-                  {new Date(s.startedAt).toLocaleDateString()} · {formatDuration(s.eligibleMs * a.weight)} attributed ({Math.round(a.weight * 100)}% of {formatDuration(s.eligibleMs)})
+                  {new Date(s.startedAt).toLocaleDateString()} ·{' '}
+                  {formatDuration(s.eligibleMs * a.weight)} attributed ({Math.round(a.weight * 100)}
+                  % of {formatDuration(s.eligibleMs)})
                 </span>
               </li>
             );
           })}
         </ul>
       </Card>
-      <Card title="Explain this evidence" action={<Button variant="secondary" disabled={!ai} onClick={explain}>Generate explanation</Button>}>
+      <Card
+        title="Explain this evidence"
+        action={
+          <Button variant="secondary" disabled={!ai} onClick={explain}>
+            Generate explanation
+          </Button>
+        }
+      >
         {explanation ? (
           <div className="space-y-2">
             <SourceBadge source={explanation.source} />
             <p className="text-sm text-slate-700">{explanation.text}</p>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">{explainError || (ai ? 'A plain-language explanation of what this evidence does and does not show.' : 'Requires Firebase AI Logic.')}</p>
+          <p className="text-sm text-slate-500">
+            {explainError ||
+              (ai
+                ? 'A plain-language explanation of what this evidence does and does not show.'
+                : 'Requires Firebase AI Logic.')}
+          </p>
         )}
       </Card>
     </div>

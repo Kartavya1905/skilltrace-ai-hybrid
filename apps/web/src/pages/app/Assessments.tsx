@@ -8,7 +8,9 @@ function Runner({ def, onDone }: { def: AssessmentDefinition; onDone: () => void
   const { store } = useApp();
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({});
   const [result, setResult] = useState<ReturnType<typeof gradeAssessment> | null>(null);
-  const [policy, setPolicy] = useState<'closed_book' | 'open_book' | 'ai_assisted_allowed'>('closed_book');
+  const [policy, setPolicy] = useState<'closed_book' | 'open_book' | 'ai_assisted_allowed'>(
+    'closed_book',
+  );
 
   async function submit() {
     const graded = gradeAssessment(def, answers);
@@ -28,9 +30,18 @@ function Runner({ def, onDone }: { def: AssessmentDefinition; onDone: () => void
   }
 
   return (
-    <Card title={def.title} action={<Button variant="ghost" onClick={onDone}>Close</Button>}>
+    <Card
+      title={def.title}
+      action={
+        <Button variant="ghost" onClick={onDone}>
+          Close
+        </Button>
+      }
+    >
       <fieldset className="mb-4">
-        <legend className="text-sm font-medium text-slate-800">Assistance policy (recorded with the result)</legend>
+        <legend className="text-sm font-medium text-slate-800">
+          Assistance policy (recorded with the result)
+        </legend>
         <div className="mt-1 flex flex-wrap gap-3 text-sm">
           {(
             [
@@ -40,7 +51,14 @@ function Runner({ def, onDone }: { def: AssessmentDefinition; onDone: () => void
             ] as const
           ).map(([v, l]) => (
             <label key={v} className="flex items-center gap-1">
-              <input type="radio" name="policy" checked={policy === v} onChange={() => setPolicy(v)} disabled={!!result} /> {l}
+              <input
+                type="radio"
+                name="policy"
+                checked={policy === v}
+                onChange={() => setPolicy(v)}
+                disabled={!!result}
+              />{' '}
+              {l}
             </label>
           ))}
         </div>
@@ -54,16 +72,33 @@ function Runner({ def, onDone }: { def: AssessmentDefinition; onDone: () => void
                 <legend className="text-sm font-medium text-slate-900">
                   {qi + 1}. {q.prompt}
                 </legend>
-                {q.code && <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-slate-100">{q.code}</pre>}
+                {q.code && (
+                  <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-slate-100">
+                    {q.code}
+                  </pre>
+                )}
                 <div className="mt-2 grid gap-1 sm:grid-cols-2">
                   {q.options.map((o, i) => (
-                    <label key={o} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ${result && i === q.correctIndex ? 'bg-emerald-50 ring-emerald-300' : 'ring-slate-200'}`}>
-                      <input type="radio" name={q.id} disabled={!!result} checked={answers[q.id] === i} onChange={() => setAnswers({ ...answers, [q.id]: i })} />
+                    <label
+                      key={o}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ${result && i === q.correctIndex ? 'bg-emerald-50 ring-emerald-300' : 'ring-slate-200'}`}
+                    >
+                      <input
+                        type="radio"
+                        name={q.id}
+                        disabled={!!result}
+                        checked={answers[q.id] === i}
+                        onChange={() => setAnswers({ ...answers, [q.id]: i })}
+                      />
                       {o}
                     </label>
                   ))}
                 </div>
-                {r && <p className={`mt-1 text-xs ${r.correct ? 'text-emerald-700' : 'text-rose-700'}`}>{r.correct ? 'Correct.' : 'Incorrect.'} {q.explanation}</p>}
+                {r && (
+                  <p className={`mt-1 text-xs ${r.correct ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {r.correct ? 'Correct.' : 'Incorrect.'} {q.explanation}
+                  </p>
+                )}
               </fieldset>
             </li>
           );
@@ -71,10 +106,15 @@ function Runner({ def, onDone }: { def: AssessmentDefinition; onDone: () => void
       </ol>
       {result ? (
         <p className="mt-4 text-sm font-medium">
-          Score: {result.score}/{result.maxScore}. Saved as an unproctored self-attempt, separate from learning time.
+          Score: {result.score}/{result.maxScore}. Saved as an unproctored self-attempt, separate
+          from learning time.
         </p>
       ) : (
-        <Button className="mt-4" onClick={submit} disabled={Object.keys(answers).length < def.questions.length}>
+        <Button
+          className="mt-4"
+          onClick={submit}
+          disabled={Object.keys(answers).length < def.questions.length}
+        >
           Submit for grading
         </Button>
       )}
@@ -87,7 +127,10 @@ export default function Assessments() {
   const [active, setActive] = useState<AssessmentDefinition | null>(null);
   return (
     <div className="space-y-6">
-      <PageHeader title="Assessments" subtitle="Objectively graded questions with deterministic scoring (no AI grading). Results are competency evidence, displayed separately from learning duration." />
+      <PageHeader
+        title="Assessments"
+        subtitle="Objectively graded questions with deterministic scoring (no AI grading). Results are competency evidence, displayed separately from learning duration."
+      />
       {active ? (
         <Runner key={active.id} def={active} onDone={() => setActive(null)} />
       ) : (
@@ -101,7 +144,8 @@ export default function Assessments() {
                 <h2 className="mt-2 font-semibold">{a.title}</h2>
                 <p className="mt-1 text-sm text-slate-600">{a.description}</p>
                 <p className="mt-2 text-xs text-slate-500">
-                  {attempts.length} attempt(s){attempts.length ? ` · best ${best}/${a.questions.length}` : ''}
+                  {attempts.length} attempt(s)
+                  {attempts.length ? ` · best ${best}/${a.questions.length}` : ''}
                 </p>
                 <Button className="mt-3" onClick={() => setActive(a)}>
                   Start

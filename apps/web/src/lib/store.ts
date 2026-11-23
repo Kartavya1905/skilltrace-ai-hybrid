@@ -5,7 +5,12 @@
  *    re-syncs are idempotent; the persistent local cache queues writes while offline.
  *  - LocalStore: IndexedDB in this browser (Local Demo mode, no account needed).
  */
-import type { CollectionTypes, LearningEventRecord, PrivateCollection, PublicPassport } from '@skilltrace/shared';
+import type {
+  CollectionTypes,
+  LearningEventRecord,
+  PrivateCollection,
+  PublicPassport,
+} from '@skilltrace/shared';
 import { PRIVATE_COLLECTIONS } from '@skilltrace/shared';
 import {
   collection,
@@ -101,7 +106,10 @@ export class FirestoreStore implements DataStore {
   }
 }
 
-export async function fetchPublicPassport(db: Firestore | null, shareId: string): Promise<PublicPassport | null> {
+export async function fetchPublicPassport(
+  db: Firestore | null,
+  shareId: string,
+): Promise<PublicPassport | null> {
   if (!db) return localPublicKV.get<PublicPassport>('public', shareId).then((v) => v ?? null);
   const snap = await getDoc(doc(db, 'public_passports', shareId));
   return snap.exists() ? (snap.data() as PublicPassport) : null;

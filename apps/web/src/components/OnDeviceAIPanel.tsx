@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { checkOnDeviceAvailability, type OnDeviceAvailability } from '@skilltrace/ai-engine/firebase';
+import {
+  checkOnDeviceAvailability,
+  type OnDeviceAvailability,
+} from '@skilltrace/ai-engine/firebase';
 import { useApp } from '../lib/app-context';
 import { Badge, Button, Progress } from './ui';
 
-const LABELS: Record<OnDeviceAvailability, { text: string; tone: 'green' | 'amber' | 'slate' | 'rose' }> = {
+const LABELS: Record<
+  OnDeviceAvailability,
+  { text: string; tone: 'green' | 'amber' | 'slate' | 'rose' }
+> = {
   available: { text: 'On-device model ready', tone: 'green' },
   downloadable: { text: 'On-device model can be downloaded', tone: 'amber' },
   downloading: { text: 'On-device model downloading', tone: 'amber' },
@@ -44,16 +50,24 @@ export function OnDeviceAIPanel() {
       </div>
       {availability === 'api_missing' && (
         <p className="text-xs text-slate-600">
-          On-device inference needs desktop Chrome 139+ with <code>chrome://flags/#prompt-api-for-gemini-nano-multimodal-input</code> enabled (then restart Chrome).
-          Until then, tasks either ask before using the cloud model or wait, depending on your privacy setting.
+          On-device inference needs desktop Chrome 139+ with{' '}
+          <code>chrome://flags/#prompt-api-for-gemini-nano-multimodal-input</code> enabled (then
+          restart Chrome). Until then, tasks either ask before using the cloud model or wait,
+          depending on your privacy setting.
         </p>
       )}
       {ai ? (
-        <Button onClick={init} disabled={busy || availability === 'api_missing' || availability === 'unavailable'}>
+        <Button
+          onClick={init}
+          disabled={busy || availability === 'api_missing' || availability === 'unavailable'}
+        >
           {busy ? 'Initialising…' : 'Initialise on-device model'}
         </Button>
       ) : (
-        <p className="text-xs text-slate-600">Firebase AI Logic is not configured for this build, so no model can be initialised. Tracking still works.</p>
+        <p className="text-xs text-slate-600">
+          Firebase AI Logic is not configured for this build, so no model can be initialised.
+          Tracking still works.
+        </p>
       )}
       {progress !== null && busy && <Progress value={progress} label="Model download progress" />}
       {message && <p className="text-xs text-slate-600">{message}</p>}

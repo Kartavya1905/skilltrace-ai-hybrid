@@ -5,38 +5,89 @@ import { normalizeSkill } from '@skilltrace/skill-taxonomy';
 import { useApp } from '../../lib/app-context';
 import { confirmProject, newProject, setProjectSkills } from '../../lib/actions';
 import { projectHours } from '../../lib/analytics';
-import { Badge, Button, Card, EmptyState, EvidenceBadge, Field, Modal, PageHeader, inputCls } from '../../components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  EvidenceBadge,
+  Field,
+  Modal,
+  PageHeader,
+  inputCls,
+} from '../../components/ui';
 
 function ConfirmDialog({ project, onClose }: { project: Project; onClose: () => void }) {
   const { data, store } = useApp();
   const links = data.project_skill_links.filter((l) => l.projectId === project.id);
-  const [selected, setSelected] = useState<string[]>(links.filter((l) => l.suggestedBy === 'github_languages').map((l) => l.skill));
+  const [selected, setSelected] = useState<string[]>(
+    links.filter((l) => l.suggestedBy === 'github_languages').map((l) => l.skill),
+  );
   const [start, setStart] = useState(project.startedAt.slice(0, 10));
   const [extra, setExtra] = useState('');
   return (
     <Modal open title={`Add "${project.title}" to your Skill Passport?`} onClose={onClose}>
-      <p className="text-sm text-slate-600">Choose the skills this project demonstrates. Suggestions come from repository languages/README and, when available, Firebase AI Logic. Nothing is added until you confirm.</p>
+      <p className="text-sm text-slate-600">
+        Choose the skills this project demonstrates. Suggestions come from repository
+        languages/README and, when available, Firebase AI Logic. Nothing is added until you confirm.
+      </p>
       <fieldset className="mt-3 space-y-1">
         {links.map((l) => (
           <label key={l.id} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={selected.includes(l.skill)} onChange={() => setSelected((s) => (s.includes(l.skill) ? s.filter((x) => x !== l.skill) : [...s, l.skill]))} />
-            {l.skill} <Badge tone={l.suggestedBy === 'ai_suggestion' ? 'violet' : 'slate'}>{l.suggestedBy === 'ai_suggestion' ? 'AI suggestion' : 'GitHub metadata'}</Badge>
+            <input
+              type="checkbox"
+              checked={selected.includes(l.skill)}
+              onChange={() =>
+                setSelected((s) =>
+                  s.includes(l.skill) ? s.filter((x) => x !== l.skill) : [...s, l.skill],
+                )
+              }
+            />
+            {l.skill}{' '}
+            <Badge tone={l.suggestedBy === 'ai_suggestion' ? 'violet' : 'slate'}>
+              {l.suggestedBy === 'ai_suggestion' ? 'AI suggestion' : 'GitHub metadata'}
+            </Badge>
           </label>
         ))}
       </fieldset>
       <Field label="Other skills (comma separated)">
         <input className={inputCls} value={extra} onChange={(e) => setExtra(e.target.value)} />
       </Field>
-      <Field label="Project start date (you confirm)" hint="Defaults to the repository creation date.">
-        <input type="date" className={inputCls} value={start} onChange={(e) => setStart(e.target.value)} />
+      <Field
+        label="Project start date (you confirm)"
+        hint="Defaults to the repository creation date."
+      >
+        <input
+          type="date"
+          className={inputCls}
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+        />
       </Field>
-      <p className="mt-2 text-xs text-slate-500">Importing adds 0 learning hours and 0 project hours. Log your own work sessions on the project page.</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Importing adds 0 learning hours and 0 project hours. Log your own work sessions on the
+        project page.
+      </p>
       <div className="mt-4 flex gap-2">
         <Button
           onClick={async () => {
             if (!store) return;
-            const skills = [...new Set([...selected, ...extra.split(',').map((s) => normalizeSkill(s.trim()).name).filter(Boolean)])];
-            await confirmProject(store, data, project, skills, new Date(`${start}T00:00:00Z`).toISOString());
+            const skills = [
+              ...new Set([
+                ...selected,
+                ...extra
+                  .split(',')
+                  .map((s) => normalizeSkill(s.trim()).name)
+                  .filter(Boolean),
+              ]),
+            ];
+            await confirmProject(
+              store,
+              data,
+              project,
+              skills,
+              new Date(`${start}T00:00:00Z`).toISOString(),
+            );
             onClose();
           }}
         >
@@ -88,7 +139,14 @@ export default function Projects() {
         </Card>
       )}
       {confirmed.length === 0 ? (
-        <EmptyState title="No confirmed projects" action={<Link className="text-sm font-medium text-indigo-700 underline" to="/app/github">Import from GitHub</Link>}>
+        <EmptyState
+          title="No confirmed projects"
+          action={
+            <Link className="text-sm font-medium text-indigo-700 underline" to="/app/github">
+              Import from GitHub
+            </Link>
+          }
+        >
           Create a manual project or import a public GitHub repository.
         </EmptyState>
       ) : (
@@ -96,7 +154,10 @@ export default function Projects() {
           {confirmed.map((p) => (
             <Card key={p.id}>
               <div className="flex items-start justify-between gap-2">
-                <Link to={`/app/projects/${p.id}`} className="text-lg font-semibold text-slate-900 hover:underline">
+                <Link
+                  to={`/app/projects/${p.id}`}
+                  className="text-lg font-semibold text-slate-900 hover:underline"
+                >
                   {p.title}
                 </Link>
                 <Badge tone="amber">{msToHours(hours.get(p.id) ?? 0)} h self-reported</Badge>
@@ -118,22 +179,46 @@ export default function Projects() {
       <Modal open={creating} title="New manual project" onClose={() => setCreating(false)}>
         <div className="space-y-3">
           <Field label="Title">
-            <input className={inputCls} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <input
+              className={inputCls}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
           </Field>
           <Field label="Description">
-            <textarea className={inputCls} rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
           </Field>
           <Field label="Skills (comma separated)">
-            <input className={inputCls} value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} />
+            <input
+              className={inputCls}
+              value={form.skills}
+              onChange={(e) => setForm({ ...form, skills: e.target.value })}
+            />
           </Field>
           <Field label="Evidence or repository URL (optional)">
-            <input className={inputCls} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
+            <input
+              className={inputCls}
+              value={form.url}
+              onChange={(e) => setForm({ ...form, url: e.target.value })}
+            />
           </Field>
           <Button
             disabled={!form.title.trim()}
             onClick={async () => {
               if (!store) return;
-              const skills = [...new Set(form.skills.split(',').map((s) => normalizeSkill(s.trim()).name).filter(Boolean))];
+              const skills = [
+                ...new Set(
+                  form.skills
+                    .split(',')
+                    .map((s) => normalizeSkill(s.trim()).name)
+                    .filter(Boolean),
+                ),
+              ];
               const isGh = /github\.com\//.test(form.url);
               const p = newProject(store.uid, {
                 title: form.title.trim(),

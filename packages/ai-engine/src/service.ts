@@ -14,11 +14,14 @@ import type { CloudAIConsent, InferenceSourceLabel } from '@skilltrace/shared';
 import { JSON_SCHEMAS, VALIDATORS, parseModelJson, type TaskName } from './schemas';
 
 /** Mirrors firebase/ai InferenceMode string values (verified against firebase 13.4.0 typings). */
-export type InferenceModeValue = 'prefer_on_device' | 'only_on_device' | 'only_in_cloud' | 'prefer_in_cloud';
+export type InferenceModeValue =
+  'prefer_on_device' | 'only_on_device' | 'only_in_cloud' | 'prefer_in_cloud';
 
 /** Minimal surface of firebase/ai GenerativeModel that the service relies on. */
 export interface ModelHandle {
-  generateContent(prompt: string): Promise<{ response: { text(): string; inferenceSource?: string } }>;
+  generateContent(
+    prompt: string,
+  ): Promise<{ response: { text(): string; inferenceSource?: string } }>;
   initializeDeviceModel?(onDownloadProgress?: (progress: number) => void): Promise<void>;
 }
 
@@ -97,16 +100,27 @@ function mapSource(raw: string | undefined): InferenceSourceLabel {
   return 'unknown';
 }
 
-export function classifyError(err: unknown, mode: InferenceModeValue | null): { kind: AIErrorKind; code: string; message: string } {
+export function classifyError(
+  err: unknown,
+  mode: InferenceModeValue | null,
+): { kind: AIErrorKind; code: string; message: string } {
   const e = err as { code?: string; message?: string; customErrorData?: { status?: number } };
   const code = String(e?.code ?? 'unknown');
   const message = String(e?.message ?? err ?? 'Unknown error');
   const status = e?.customErrorData?.status;
-  if (status === 429 || /RESOURCE_EXHAUSTED|429|quota/i.test(message)) return { kind: 'rate_limited', code, message };
-  if (/app.?check|PERMISSION_DENIED|403/i.test(message) || status === 403) return { kind: 'app_check', code, message };
-  if (code === 'no-api-key' || code === 'no-app-id' || code === 'no-project-id' || code === 'no-model')
+  if (status === 429 || /RESOURCE_EXHAUSTED|429|quota/i.test(message))
+    return { kind: 'rate_limited', code, message };
+  if (/app.?check|PERMISSION_DENIED|403/i.test(message) || status === 403)
+    return { kind: 'app_check', code, message };
+  if (
+    code === 'no-api-key' ||
+    code === 'no-app-id' ||
+    code === 'no-project-id' ||
+    code === 'no-model'
+  )
     return { kind: 'not_configured', code, message };
-  if (code === 'fetch-error' || /Failed to fetch|NetworkError|network/i.test(message)) return { kind: 'network', code, message };
+  if (code === 'fetch-error' || /Failed to fetch|NetworkError|network/i.test(message))
+    return { kind: 'network', code, message };
   if ((code === 'unsupported' || code === 'api-not-enabled') && mode === 'only_on_device')
     return { kind: 'local_unavailable', code, message };
   if (code === 'parse-failed') return { kind: 'malformed_output', code, message };
@@ -135,9 +149,12 @@ export class HybridAIService {
   }
 
   /** Must be called from a user gesture (button click). May download the on-device model. */
-  async initializeOnDevice(onProgress?: (p: number) => void): Promise<{ ok: boolean; message: string }> {
+  async initializeOnDevice(
+    onProgress?: (p: number) => void,
+  ): Promise<{ ok: boolean; message: string }> {
     const m = this.factory.model('classify', 'prefer_on_device');
-    if (!m.initializeDeviceModel) return { ok: false, message: 'initializeDeviceModel is not available in this SDK build.' };
+    if (!m.initializeDeviceModel)
+      return { ok: false, message: 'initializeDeviceModel is not available in this SDK build.' };
     try {
       await m.initializeDeviceModel(onProgress);
       return { ok: true, message: 'On-device model initialised.' };
@@ -146,7 +163,11 @@ export class HybridAIService {
     }
   }
 
-  private async attempt<T>(task: TaskName, mode: InferenceModeValue, prompt: string): Promise<AIResult<T>> {
+  private async attempt<T>(
+    task: TaskName,
+    mode: InferenceModeValue,
+    prompt: string,
+  ): Promise<AIResult<T>> {
     const started = this.now();
     const base = { task, mode, timestamp: new Date(started).toISOString() };
     if (mode !== 'only_on_device' && !this.takeCloudToken()) {
@@ -155,7 +176,11 @@ export class HybridAIService {
         ok: false,
         durationMs: 0,
         retryLater: true,
-        error: { kind: 'rate_limited', code: 'client-rate-limit', message: 'Local rate limit reached; will retry shortly.' },
+        error: {
+          kind: 'rate_limited',
+          code: 'client-rate-limit',
+          message: 'Local rate limit reached; will retry shortly.',
+        },
       };
     }
     if (mode === 'only_on_device' && !this.factory.onDeviceApiPresent()) {
@@ -167,7 +192,8 @@ export class HybridAIService {
         error: {
           kind: 'local_unavailable',
           code: 'prompt-api-missing',
-          message: 'Chrome built-in AI (Prompt API) is not available in this browser, so no on-device request was made.',
+          message:
+            'Chrome built-in AI (Prompt API) is not available in this browser, so no on-device request was made.',
         },
       };
     }
@@ -183,12 +209,19 @@ export class HybridAIService {
             ok: false,
             durationMs: this.now() - started,
             retryLater: false,
-            error: { kind: 'policy_violation', code: 'unexpected-source', message: `On-device-only request reported source "${source}". Result discarded.` },
+            error: {
+              kind: 'policy_violation',
+              code: 'unexpected-source',
+              message: `On-device-only request reported source "${source}". Result discarded.`,
+            },
           };
         }
         const parsed = VALIDATORS[task].safeParse(parseModelJson(result.response.text()));
         if (!parsed.success) {
-          lastErr = Object.assign(new Error(`Malformed ${task} output: ${parsed.error.issues[0]?.message ?? ''}`), { code: 'parse-failed' });
+          lastErr = Object.assign(
+            new Error(`Malformed ${task} output: ${parsed.error.issues[0]?.message ?? ''}`),
+            { code: 'parse-failed' },
+          );
           continue; // one retry for malformed structured output
         }
         return {
@@ -196,13 +229,19 @@ export class HybridAIService {
           ok: true,
           output: parsed.data as T,
           source,
-          model: source === 'in_cloud' ? this.factory.cloudModelName : source === 'on_device' ? ON_DEVICE_MODEL_LABEL : 'unknown',
+          model:
+            source === 'in_cloud'
+              ? this.factory.cloudModelName
+              : source === 'on_device'
+                ? ON_DEVICE_MODEL_LABEL
+                : 'unknown',
           durationMs: this.now() - started,
         };
       } catch (err) {
-        lastErr = err instanceof SyntaxError || /not valid JSON/.test(String((err as Error)?.message))
-          ? Object.assign(new Error((err as Error).message), { code: 'parse-failed' })
-          : err;
+        lastErr =
+          err instanceof SyntaxError || /not valid JSON/.test(String((err as Error)?.message))
+            ? Object.assign(new Error((err as Error).message), { code: 'parse-failed' })
+            : err;
         const kind = classifyError(lastErr, mode).kind;
         if (kind !== 'malformed_output') break;
       }
@@ -229,29 +268,47 @@ export class HybridAIService {
     if (consent === 'allow') {
       // Genuine SDK hybrid routing. The prompt may go to the cloud, so use the minimised one.
       const r = await this.attempt<T>(task, 'prefer_on_device', prompts.cloud);
-      if (!r.ok && !online) return this.log({ ...r, retryLater: true, error: { ...r.error, kind: 'offline' } });
+      if (!r.ok && !online)
+        return this.log({ ...r, retryLater: true, error: { ...r.error, kind: 'offline' } });
       return this.log(r);
     }
 
     const local = this.log(await this.attempt<T>(task, 'only_on_device', prompts.local));
     if (local.ok || consent === 'deny') return local;
     if (!online) {
-      return { ...local, retryLater: true, error: { kind: 'offline', code: 'offline', message: 'Offline and the on-device model is unavailable. Queued.' } };
+      return {
+        ...local,
+        retryLater: true,
+        error: {
+          kind: 'offline',
+          code: 'offline',
+          message: 'Offline and the on-device model is unavailable. Queued.',
+        },
+      };
     }
-    const granted = (await this.deps.requestCloudConsent?.(task, prompts.cloudDataDescription)) ?? false;
+    const granted =
+      (await this.deps.requestCloudConsent?.(task, prompts.cloudDataDescription)) ?? false;
     if (!granted) {
       return {
         ...local,
         mode: 'only_in_cloud',
         retryLater: false,
-        error: { kind: 'cloud_consent_denied', code: 'consent', message: 'Cloud inference was not approved. Nothing was uploaded.' },
+        error: {
+          kind: 'cloud_consent_denied',
+          code: 'consent',
+          message: 'Cloud inference was not approved. Nothing was uploaded.',
+        },
       };
     }
     return this.log(await this.attempt<T>(task, 'only_in_cloud', prompts.cloud));
   }
 
   /** Force a specific mode (used by the hybrid demo panel to show both paths side by side). */
-  async runWithMode<T>(task: TaskName, mode: InferenceModeValue, prompt: string): Promise<AIResult<T>> {
+  async runWithMode<T>(
+    task: TaskName,
+    mode: InferenceModeValue,
+    prompt: string,
+  ): Promise<AIResult<T>> {
     if (mode !== 'only_on_device' && this.deps.consent() === 'deny') {
       return {
         task,
@@ -260,7 +317,11 @@ export class HybridAIService {
         durationMs: 0,
         timestamp: new Date(this.now()).toISOString(),
         retryLater: false,
-        error: { kind: 'cloud_consent_denied', code: 'consent', message: 'Cloud AI is disabled in your privacy settings.' },
+        error: {
+          kind: 'cloud_consent_denied',
+          code: 'consent',
+          message: 'Cloud AI is disabled in your privacy settings.',
+        },
       };
     }
     return this.log(await this.attempt<T>(task, mode, prompt));

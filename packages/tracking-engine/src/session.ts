@@ -4,7 +4,13 @@
  * engagement checks, and exposes a live summary. Reconstruction from the persisted log uses the
  * same reducers, so live and reconstructed totals agree.
  */
-import type { EngagementEvent, LearningEvent, MediaEvent, ReadingEvent, SessionMeta } from '@skilltrace/shared';
+import type {
+  EngagementEvent,
+  LearningEvent,
+  MediaEvent,
+  ReadingEvent,
+  SessionMeta,
+} from '@skilltrace/shared';
 import { eventId, type Clock, systemClock, type Interval } from '@skilltrace/shared';
 import {
   PlaybackTracker,
@@ -56,7 +62,9 @@ export function playbackConfigFor(meta: SessionMeta, opts: TrackingOptions): Pla
   return {
     ...base,
     creditHidden: kind === 'audio' ? true : opts.creditHiddenVideo,
-    verification: v ? { ...v, responseWindowMs: Math.round(v.responseWindowMs * opts.responseWindowMultiplier) } : null,
+    verification: v
+      ? { ...v, responseWindowMs: Math.round(v.responseWindowMs * opts.responseWindowMultiplier) }
+      : null,
   };
 }
 
@@ -121,15 +129,23 @@ export function summarize(
 }
 
 /** Rebuild a session's totals from its persisted events. */
-export function reconstructSession(meta: SessionMeta, events: readonly LearningEvent[], opts: TrackingOptions): SessionResult {
+export function reconstructSession(
+  meta: SessionMeta,
+  events: readonly LearningEvent[],
+  opts: TrackingOptions,
+): SessionResult {
   const own = events.filter((e) => e.sessionId === meta.sessionId);
   const endedAt = own.reduce((m, e) => Math.max(m, e.t), meta.startedAt);
   if (isMediaType(meta.contentType)) {
-    const media = own.filter((e): e is MediaEvent | EngagementEvent => e.kind === 'media' || e.kind === 'engagement');
+    const media = own.filter(
+      (e): e is MediaEvent | EngagementEvent => e.kind === 'media' || e.kind === 'engagement',
+    );
     const tracker = replayPlayback(media, { ...playbackConfigFor(meta, opts) }, meta.durationSec);
     return summarize(meta, tracker, null, endedAt);
   }
-  const reading = own.filter((e): e is ReadingEvent | EngagementEvent => e.kind === 'reading' || e.kind === 'engagement');
+  const reading = own.filter(
+    (e): e is ReadingEvent | EngagementEvent => e.kind === 'reading' || e.kind === 'engagement',
+  );
   const tracker = replayReading(reading, readingConfigFor(meta, opts));
   return summarize(meta, null, tracker, endedAt);
 }
@@ -166,7 +182,8 @@ export class TrackedSession {
     private readonly clock: Clock = systemClock,
   ) {
     this.meta = meta;
-    if (isMediaType(meta.contentType)) this.playback = new PlaybackTracker(playbackConfigFor(meta, opts), meta.durationSec);
+    if (isMediaType(meta.contentType))
+      this.playback = new PlaybackTracker(playbackConfigFor(meta, opts), meta.durationSec);
     else this.reading = new ReadingTracker(readingConfigFor(meta, opts));
   }
 
@@ -176,7 +193,12 @@ export class TrackedSession {
 
   private next(): { id: string; sessionId: string; seq: number; t: number } {
     const seq = this.seq++;
-    return { id: eventId(this.meta.sessionId, seq), sessionId: this.meta.sessionId, seq, t: Math.round(this.clock.now()) };
+    return {
+      id: eventId(this.meta.sessionId, seq),
+      sessionId: this.meta.sessionId,
+      seq,
+      t: Math.round(this.clock.now()),
+    };
   }
 
   private record(e: LearningEvent): void {
@@ -189,16 +211,29 @@ export class TrackedSession {
     }
   }
 
-  media(type: MediaEvent['type'], m: { pos: number; rate: number; duration: number; fromPos?: number; fromT?: number }): void {
+  media(
+    type: MediaEvent['type'],
+    m: { pos: number; rate: number; duration: number; fromPos?: number; fromT?: number },
+  ): void {
     if (!this.playback) return;
     this.lastMedia = { pos: m.pos, rate: m.rate, duration: m.duration };
-    const e: MediaEvent = { ...this.next(), kind: 'media', type, pos: m.pos, rate: m.rate, duration: m.duration };
+    const e: MediaEvent = {
+      ...this.next(),
+      kind: 'media',
+      type,
+      pos: m.pos,
+      rate: m.rate,
+      duration: m.duration,
+    };
     if (m.fromPos !== undefined) e.fromPos = m.fromPos;
     if (m.fromT !== undefined) e.fromT = Math.round(m.fromT);
     this.record(e);
   }
 
-  readingEvent(type: ReadingEvent['type'], extra: { scrollRatio?: number; sectionId?: string } = {}): void {
+  readingEvent(
+    type: ReadingEvent['type'],
+    extra: { scrollRatio?: number; sectionId?: string } = {},
+  ): void {
     if (!this.reading) return;
     const e: ReadingEvent = { ...this.next(), kind: 'reading', type, ...extra };
     this.record(e);

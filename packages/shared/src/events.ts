@@ -98,7 +98,13 @@ export const SessionMetaSchema = z.object({
   durationSec: z.number().nonnegative(),
   excerpt: z.string().max(2000),
   sections: z
-    .array(z.object({ id: z.string().max(100), heading: z.string().max(200), words: z.number().int().nonnegative() }))
+    .array(
+      z.object({
+        id: z.string().max(100),
+        heading: z.string().max(200),
+        words: z.number().int().nonnegative(),
+      }),
+    )
     .max(200),
   startedAt: z.number().int().positive(),
   device: z.enum(['extension', 'learning_lab']),
@@ -107,7 +113,9 @@ export const SessionMetaSchema = z.object({
 export type SessionMeta = z.infer<typeof SessionMetaSchema>;
 
 /** Deduplicate by id and order by (t, seq). Safe to call on any merged batch. */
-export function dedupeAndSort<T extends { id: string; t: number; seq: number }>(events: readonly T[]): T[] {
+export function dedupeAndSort<T extends { id: string; t: number; seq: number }>(
+  events: readonly T[],
+): T[] {
   const seen = new Map<string, T>();
   for (const e of events) if (!seen.has(e.id)) seen.set(e.id, e);
   return [...seen.values()].sort((a, b) => a.t - b.t || a.seq - b.seq);

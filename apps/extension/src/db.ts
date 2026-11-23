@@ -9,7 +9,8 @@ function open(): Promise<IDBDatabase> {
     const req = indexedDB.open(DB, 1);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains('sessions')) db.createObjectStore('sessions', { keyPath: 'meta.sessionId' });
+      if (!db.objectStoreNames.contains('sessions'))
+        db.createObjectStore('sessions', { keyPath: 'meta.sessionId' });
       if (!db.objectStoreNames.contains('events')) {
         const s = db.createObjectStore('events', { keyPath: 'id' });
         s.createIndex('bySession', 'sessionId');
@@ -20,7 +21,11 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-function tx<T>(stores: string[], mode: IDBTransactionMode, fn: (t: IDBTransaction) => T): Promise<T> {
+function tx<T>(
+  stores: string[],
+  mode: IDBTransactionMode,
+  fn: (t: IDBTransaction) => T,
+): Promise<T> {
   return open().then(
     (db) =>
       new Promise<T>((resolve, reject) => {
@@ -59,7 +64,9 @@ export async function putEvents(events: LearningEvent[]): Promise<void> {
 
 export async function eventsFor(sessionId: string): Promise<LearningEvent[]> {
   const db = await open();
-  return all<LearningEvent>(db.transaction('events').objectStore('events').index('bySession').getAll(sessionId));
+  return all<LearningEvent>(
+    db.transaction('events').objectStore('events').index('bySession').getAll(sessionId),
+  );
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {

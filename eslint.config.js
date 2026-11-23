@@ -5,14 +5,25 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['**/node_modules/**', '**/dist/**', 'coverage/**', 'playwright-report/**', 'test-results/**', 'scripts/.media-tmp/**', '.firebase/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'coverage/**',
+      'playwright-report/**',
+      'test-results/**',
+      'scripts/.media-tmp/**',
+      '.firebase/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/consistent-type-imports': 'error',
     },
   },

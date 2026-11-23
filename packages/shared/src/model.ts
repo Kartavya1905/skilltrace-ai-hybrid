@@ -104,7 +104,8 @@ export interface LearningSource extends BaseRecord {
   excerpt: string; // short, permitted excerpt used for classification
 }
 
-export type ClassificationStatus = 'pending' | 'queued_offline' | 'classified' | 'corrected' | 'failed';
+export type ClassificationStatus =
+  'pending' | 'queued_offline' | 'classified' | 'corrected' | 'failed';
 
 export interface SkillAttribution {
   skill: string; // canonical skill name
@@ -131,7 +132,13 @@ export interface LearningSession extends BaseRecord {
   attributions: SkillAttribution[];
   summary: string;
   /** Only set when an AI result exists; source is exactly what the SDK response reported. */
-  classifiedBy: { source: InferenceSourceLabel; durationMs: number; model: string; mode: string; at: string } | null;
+  classifiedBy: {
+    source: InferenceSourceLabel;
+    durationMs: number;
+    model: string;
+    mode: string;
+    at: string;
+  } | null;
   device: 'extension' | 'learning_lab';
 }
 
@@ -186,7 +193,13 @@ export interface AssessmentRecord extends BaseRecord {
   skill: string;
   title: string;
   attemptedAt: string;
-  questions: { id: string; prompt: string; type: AssessmentType; answer: string; correct: boolean | null }[];
+  questions: {
+    id: string;
+    prompt: string;
+    type: AssessmentType;
+    answer: string;
+    correct: boolean | null;
+  }[];
   score: number; // objectively graded questions only
   maxScore: number;
   assistancePolicy: 'closed_book' | 'open_book' | 'ai_assisted_allowed';
@@ -351,7 +364,13 @@ export interface PublicSkillEvidence {
   topics: string[];
   sourceCount: number;
   sources: { title: string; contentType: ContentType }[]; // empty when sources are hidden
-  assessments: { title: string; score: number; maxScore: number; verificationLevel: string; date: string | null }[];
+  assessments: {
+    title: string;
+    score: number;
+    maxScore: number;
+    verificationLevel: string;
+    date: string | null;
+  }[];
   linkedProjects: string[];
   evidence: Provenance[];
 }

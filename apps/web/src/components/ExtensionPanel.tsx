@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApp } from '../lib/app-context';
-import { ackSessions, extensionStatus, getExtensionId, pullSessions, setExtensionId, type ExtensionStatus } from '../lib/extension';
+import {
+  ackSessions,
+  extensionStatus,
+  getExtensionId,
+  pullSessions,
+  setExtensionId,
+  type ExtensionStatus,
+} from '../lib/extension';
 import { saveSession, trackingOptions } from '../lib/actions';
 import { reconstructSession } from '@skilltrace/tracking-engine';
 import { Badge, Button, Field, inputCls } from './ui';
@@ -34,12 +41,18 @@ export function ExtensionPanel({ compact = false }: { compact?: boolean }) {
       const sessions = await pullSessions();
       let rejected = 0;
       for (const s of sessions) {
-        const result = reconstructSession(s.meta, s.events, trackingOptions(prefs, data, s.meta.pageId));
+        const result = reconstructSession(
+          s.meta,
+          s.events,
+          trackingOptions(prefs, data, s.meta.pageId),
+        );
         await saveSession(store, s.meta, result, s.events);
         rejected += s.rejected;
       }
       await ackSessions(sessions.map((s) => s.meta.sessionId));
-      setMessage(`Imported ${sessions.length} session(s)${rejected ? `, rejected ${rejected} invalid event(s)` : ''}.`);
+      setMessage(
+        `Imported ${sessions.length} session(s)${rejected ? `, rejected ${rejected} invalid event(s)` : ''}.`,
+      );
       await refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -50,13 +63,21 @@ export function ExtensionPanel({ compact = false }: { compact?: boolean }) {
     <div className="space-y-3 text-sm">
       {!compact && (
         <p className="text-slate-600">
-          The extension stores events locally (IndexedDB) and only hands them to this dashboard when you sync. Messages are accepted only from the dashboard origins
-          listed in its manifest.
+          The extension stores events locally (IndexedDB) and only hands them to this dashboard when
+          you sync. Messages are accepted only from the dashboard origins listed in its manifest.
         </p>
       )}
       <div className="flex flex-wrap items-end gap-2">
-        <Field label="Extension ID" hint="Shown in the extension popup. Opening the dashboard from the popup fills it in automatically.">
-          <input className={`${inputCls} w-80 font-mono`} value={id} onChange={(e) => setId(e.target.value.trim())} placeholder="32 letters a–p" />
+        <Field
+          label="Extension ID"
+          hint="Shown in the extension popup. Opening the dashboard from the popup fills it in automatically."
+        >
+          <input
+            className={`${inputCls} w-80 font-mono`}
+            value={id}
+            onChange={(e) => setId(e.target.value.trim())}
+            placeholder="32 letters a–p"
+          />
         </Field>
         <Button
           variant="secondary"
@@ -79,13 +100,17 @@ export function ExtensionPanel({ compact = false }: { compact?: boolean }) {
             Extension tracking {status.trackingEnabled ? (status.paused ? 'paused' : 'on') : 'off'}
           </Badge>
           <Badge>{status.origins.length} approved site(s)</Badge>
-          <Badge tone={status.pendingSessions ? 'amber' : 'slate'}>{status.pendingSessions} session(s) waiting</Badge>
+          <Badge tone={status.pendingSessions ? 'amber' : 'slate'}>
+            {status.pendingSessions} session(s) waiting
+          </Badge>
           <Button onClick={sync} disabled={!status.pendingSessions}>
             Sync sessions
           </Button>
         </div>
       ) : (
-        <p className="text-xs text-slate-500">{error || 'Not connected. See docs/deployment.md for loading the unpacked extension.'}</p>
+        <p className="text-xs text-slate-500">
+          {error || 'Not connected. See docs/deployment.md for loading the unpacked extension.'}
+        </p>
       )}
       {status && status.origins.length > 0 && !compact && (
         <ul className="text-xs text-slate-600">
