@@ -1,0 +1,108 @@
+{
+  "python-functions": {
+    "kind": "video",
+    "title": "Python Functions in Practice",
+    "slides": [
+      {
+        "heading": "Python Functions in Practice",
+        "bullets": ["Define with def", "Parameters and arguments", "Return values", "Variable scope"],
+        "narration": [
+          "Welcome to this short lesson on Python functions.",
+          "We will cover how to define a function, how parameters and arguments work, what return values are, and how variable scope decides where a name can be seen."
+        ]
+      },
+      {
+        "heading": "Defining a function",
+        "bullets": ["def name():", "Indented body", "Runs only when called"],
+        "code": "def greet():\n    print(\"Hello\")\n\ngreet()",
+        "narration": [
+          "You define a function with the def keyword, a name, parentheses, and a colon.",
+          "The indented lines underneath are the body.",
+          "Defining a function only stores it. The body runs each time you call the function, for example by writing greet followed by parentheses."
+        ]
+      },
+      {
+        "heading": "Parameters and arguments",
+        "bullets": ["Parameters: names in the definition", "Arguments: values in the call", "Defaults: height=1"],
+        "code": "def area(width, height=1):\n    return width * height\n\narea(3, 4)   # 12\narea(5)      # 5",
+        "narration": [
+          "Parameters are the names inside the parentheses of the definition. Arguments are the values you pass when you call it.",
+          "Python matches positional arguments from left to right, or you can pass keyword arguments by name.",
+          "A parameter can have a default value, so the caller may leave it out."
+        ]
+      },
+      {
+        "heading": "Return values",
+        "bullets": ["return hands a value back", "No return means None", "print is not return"],
+        "code": "def min_max(values):\n    return min(values), max(values)\n\nlow, high = min_max([4, 9, 1])",
+        "narration": [
+          "The return statement sends a value back to the caller and ends the function immediately.",
+          "If a function never reaches a return statement, it returns None.",
+          "Remember that printing a value is not the same as returning it. You can also return several values, which Python packs into a tuple."
+        ]
+      },
+      {
+        "heading": "Variable scope: LEGB",
+        "bullets": ["Local", "Enclosing", "Global", "Built-in"],
+        "code": "count = 10\n\ndef bump():\n    count = 1\n    return count\n\nbump()  # 1, global count is still 10",
+        "narration": [
+          "Scope decides where a name can be seen. Variables assigned inside a function are local to it.",
+          "Python looks names up in the order local, enclosing, global, and built in.",
+          "Assigning to a name inside a function creates a new local variable, so the global value stays unchanged."
+        ]
+      },
+      {
+        "heading": "Recap",
+        "bullets": ["Small, named, reusable", "Clear inputs and outputs", "Avoid hidden global state"],
+        "narration": [
+          "To recap: functions give logic a name, take inputs through parameters, and hand results back with return.",
+          "Keep them small and avoid changing global state, and they will be easy to reuse and test. Thanks for watching."
+        ]
+      }
+    ]
+  },
+  "sql-select": {
+    "kind": "audio",
+    "title": "SQL SELECT Basics",
+    "slides": [
+      {
+        "heading": "Introduction",
+        "narration": [
+          "This is an audio lesson on the basics of the SQL SELECT statement.",
+          "SQL is the language used to ask questions of relational databases, where data lives in tables made of rows and columns."
+        ]
+      },
+      {
+        "heading": "SELECT and FROM",
+        "narration": [
+          "Every query starts with SELECT, followed by the columns you want, and FROM, followed by the table.",
+          "For example, select name comma email from students returns two columns for every row in the students table.",
+          "Select star returns every column, which is handy for exploring but wasteful in production code."
+        ]
+      },
+      {
+        "heading": "Filtering with WHERE",
+        "narration": [
+          "The WHERE clause keeps only the rows that match a condition.",
+          "For example, where enrolled year equals twenty twenty six keeps only students who enrolled this year.",
+          "You can combine conditions with and, or, and not."
+        ]
+      },
+      {
+        "heading": "ORDER BY and LIMIT",
+        "narration": [
+          "ORDER BY sorts the result by one or more columns, in ascending order unless you add the keyword descending.",
+          "LIMIT caps the number of rows returned, which is useful for top ten style questions.",
+          "Put together, a query can select names from students, filter by year, order by last name, and limit the result to ten rows."
+        ]
+      },
+      {
+        "heading": "Recap",
+        "narration": [
+          "To recap: SELECT chooses columns, FROM chooses the table, WHERE filters rows, ORDER BY sorts them, and LIMIT caps how many come back.",
+          "That covers the core of most everyday queries. Thanks for listening."
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@skilltrace/skill-taxonomy",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Skill normalization, taxonomy and time attribution rules",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@skilltrace/shared": "workspace:*" }
+}

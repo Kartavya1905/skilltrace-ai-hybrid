@@ -1,0 +1,12 @@
+{
+  "name": "@skilltrace/ai-engine",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "HybridAIService over Firebase AI Logic hybrid inference",
+  "exports": { ".": "./src/index.ts", "./firebase": "./src/firebase.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@skilltrace/shared": "workspace:*", "@skilltrace/skill-taxonomy": "workspace:*", "zod": "^4.6.7" },
+  "peerDependencies": { "firebase": "^13.4.0" }
+}
