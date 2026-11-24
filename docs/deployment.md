@@ -14,10 +14,31 @@ Everything below works on Firebase's no-cost **Spark** plan. Nothing in this set
 
 ## 2. Configure the web app
 
+The Firebase CLI writes the web config for you. It uses the public `VITE_FIREBASE_*` values, never a service account.
+
 ```bash
-cp .env.example apps/web/.env.local   # fill in the VITE_FIREBASE_* values and VITE_RECAPTCHA_SITE_KEY
-pnpm dev                              # http://localhost:5310
+pnpm exec firebase login                          # once per machine
+pnpm setup:firebase --project <your-project-id>   # writes apps/web/.env.local and .firebaserc
+                                                  # add --create-app if the project has no web app yet
 ```
+
+Then add the App Check values to `apps/web/.env.local` by hand:
+
+- `VITE_RECAPTCHA_SITE_KEY`: the reCAPTCHA v3 **site** key from step 1.5. Never use the secret key.
+- `VITE_APPCHECK_DEBUG=true` for local development, until the debug token is registered.
+
+```bash
+pnpm check:env                # validates the config without printing any values
+pnpm check:env --production   # deploy rules: site key required, emulators off
+pnpm dev                      # http://localhost:5310
+```
+
+**M2 is done when** you can:
+
+- sign in with Google
+- finish a Learning Lab session
+- see it under `users/<uid>/learning_sessions` in the Firestore console
+- see it classified with a source badge that the SDK reported (on-device or cloud)
 
 Open **Hybrid AI** in the dashboard. It shows the Firebase and App Check status. You can initialise the on-device model there and run the same classification in `PREFER_ON_DEVICE`, `ONLY_ON_DEVICE` and `ONLY_IN_CLOUD`, each tagged with the source the SDK reports.
 

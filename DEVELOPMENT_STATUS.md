@@ -28,7 +28,10 @@ Phase 8 (integration, security, docs) is complete in code. What remains needs ow
 
 ## Delivery pipeline
 
-Milestones M1–M6 are in docs/pipeline-milestones.md. **M1 (CI quality gate)** adds `.github/workflows/ci.yml` with three jobs: quality, Firestore rules, and E2E. It is verified once the first run on GitHub passes.
+Milestones M1–M6 are in docs/pipeline-milestones.md.
+
+- **M1 (CI quality gate): done.** `.github/workflows/ci.yml` passed all three jobs (quality, Firestore rules, E2E) on GitHub, run 45315453716, 2026-11-23.
+- **M2 (Firebase project and config): tooling done.** `pnpm setup:firebase` and `pnpm check:env` are in place, with 7 unit tests. The owner still needs to choose the project. `skilltrace-ai-hackathon-2026` already has a live Hosting release and a Firestore database, probably from the Codex version, so deploying there would replace them.
 
 ## Open blockers (owner action needed)
 

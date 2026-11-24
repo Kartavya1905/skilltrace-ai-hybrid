@@ -23,6 +23,8 @@
     "test:rules": "firebase emulators:exec --only firestore --project demo-skilltrace \"npx vitest run --config tests/rules/vitest.config.ts\"",
     "test:e2e": "playwright test",
     "check:secrets": "node scripts/check-secrets.mjs",
+    "check:env": "node scripts/check-env.mjs",
+    "setup:firebase": "node scripts/setup-firebase-env.mjs",
     "media:generate": "node scripts/generate-lab-media.mjs",
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm check:secrets"
   },
