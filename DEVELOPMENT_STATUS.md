@@ -59,14 +59,27 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
     - the live cloud transcription of a lesson clip was accurate (`in_cloud`, 2.3 s)
     - classification of "Lecture 7" moved from "not learning" to SQL (0.95) with the transcript
   - **Not yet verified:** on-device audio transcription, which needs Gemini Nano with multimodal input in the owner's Chrome.
+- **M5 (production verification): automated part done 2026-11-24; owner checks pending.**
+  - The live browser smoke test (`pnpm test:smoke`, `tests/smoke/live.spec.ts`) now runs in the pipeline after every deploy. It checks:
+    - the production build boots with no console errors, and the security headers are set
+    - sign-in options are shown, and protected routes redirect to sign-in
+    - Firestore answers through the rules
+    - App Check issues a reCAPTCHA Enterprise token on web.app
+
+    It passed 5/5 against the live site before and after enforcement.
+
+  - **App Check enforced for Cloud Firestore** on 2026-11-24. Firebase AI Logic was already enforced. Before enforcing, Firestore traffic was 83% verified; the 17% unverified came from direct test calls and the old, unused "SkillTrace AI Web" app.
+  - **Owner checks pending** (the browser pane blocks the Google sign-in popup):
+    - sign in on the live site and run the Hybrid AI modes
+    - install the v0.2.0 extension, then test YouTube per-video sessions and speech detection, including on-device transcription
 
 ## Open blockers (owner action needed)
 
-1. **M5 production verification.** Install the v0.2.0 zip in Chrome, then on the live site:
-   - sync a YouTube session with speech detection on
-   - confirm the on-device transcription source
-   - run the AI modes
-   - turn on App Check enforcement for Firestore
+1. **Owner checks for M5.** On the live site:
+   - sign in and run Hybrid AI in all three modes
+   - with the v0.2.0 extension, sync a Python and a JavaScript YouTube video with speech detection on, and report the transcription source
+
+   Then M6 (demo video and Devpost).
 
 2. **Live hybrid verification.** On-device and cloud are both confirmed on localhost (2026-11-24). Re-check on the deployed site in M5.
 3. **Deploy.** `pnpm build:web && npx firebase deploy --only firestore:rules,firestore:indexes,hosting`, then rebuild the extension with the hosted origin.

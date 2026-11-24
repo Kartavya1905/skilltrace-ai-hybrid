@@ -80,6 +80,15 @@ jobs:
             [ "$code" = "200" ] || exit 1
           done
           curl -sI "$url/" | grep -qi '^x-frame-options: DENY' || { echo "security headers missing"; exit 1; }
+      - name: Install Chromium for the browser smoke test
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser smoke test of the live site (boot, routes, Firestore rules, App Check)
+        env:
+          SMOKE_URL: https://${{ steps.config.outputs.project }}.web.app
+        run: |
+          export SMOKE_APP_ID=$(grep -E '^VITE_FIREBASE_APP_ID=' apps/web/.env.local | cut -d= -f2 | tr -d '\r')
+          export SMOKE_API_KEY=$(grep -E '^VITE_FIREBASE_API_KEY=' apps/web/.env.local | cut -d= -f2 | tr -d '\r')
+          pnpm test:smoke
 
   deploy-preview:
     name: Deploy preview channel

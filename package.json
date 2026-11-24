@@ -23,6 +23,7 @@
     "test:watch": "vitest",
     "test:rules": "firebase emulators:exec --only firestore --project demo-skilltrace \"npx vitest run --config tests/rules/vitest.config.ts\"",
     "test:e2e": "playwright test",
+    "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:env": "node scripts/check-env.mjs",
     "setup:firebase": "node scripts/setup-firebase-env.mjs",

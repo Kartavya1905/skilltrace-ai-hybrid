@@ -82,6 +82,12 @@ One-time setup in GitHub (repository **Settings → Secrets and variables → Ac
 
 Without these settings, the deploy job fails with a message that names what's missing. CI itself needs neither.
 
+After each live deploy, the pipeline also runs `pnpm test:smoke`, a browser test of the live URL that is read-only and needs no sign-in. To run it by hand:
+
+```bash
+SMOKE_URL=https://<project>.web.app SMOKE_APP_ID=<web app id> SMOKE_API_KEY=<web api key> pnpm test:smoke
+```
+
 Preview channels run on hosts like `<project>--pr12-….web.app`. Those hosts aren't in the reCAPTCHA key's domains or Auth's authorized domains, so previews show the UI, but App Check, Google sign-in and AI calls fail there. Check those on the live site.
 
 ## 4. Chrome extension for the hosted dashboard
