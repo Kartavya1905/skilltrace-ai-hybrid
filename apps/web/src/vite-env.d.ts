@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_APPCHECK_DEBUG_TOKEN?: string;
   readonly VITE_AI_CLOUD_MODEL?: string;
   readonly VITE_USE_EMULATORS?: string;
+  readonly VITE_FORCE_LOCAL_DEMO?: string;
   readonly VITE_EXTENSION_ID?: string;
 }
 interface ImportMeta {

@@ -30,9 +30,10 @@ export const firebaseConfig = {
   appId: env.VITE_FIREBASE_APP_ID ?? '',
 };
 
-export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId,
-);
+/** VITE_FORCE_LOCAL_DEMO=true (set by the E2E web server) ignores any Firebase config on disk. */
+export const isFirebaseConfigured =
+  env.VITE_FORCE_LOCAL_DEMO !== 'true' &&
+  Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 
 export interface FirebaseServices {
   app: FirebaseApp;

@@ -182,6 +182,8 @@ test('learner goes from study to a published, evidence-backed passport', async (
   // 7. Revoke: the public link stops working.
   await page.goto('/app/passport');
   await page.getByRole('button', { name: 'Revoke public link' }).click();
+  // Revoking deletes the public copy asynchronously; wait for the confirmation before visiting.
+  await expect(page.getByText('Public link revoked')).toBeVisible();
   await page.goto(link!);
   await expect(page.getByText(/does not exist or its owner revoked/)).toBeVisible();
 });

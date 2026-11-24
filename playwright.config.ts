@@ -34,7 +34,11 @@ export default defineConfig({
   webServer: {
     command: 'node apps/web/node_modules/vite/bin/vite.js apps/web --port 5310 --strictPort',
     url: 'http://localhost:5310',
-    reuseExistingServer: !isCI,
+    // Always start a fresh server forced into Local demo mode, so a dev server or an
+    // apps/web/.env.local with a real Firebase project can never receive test traffic.
+    // (Stop `pnpm dev` before running the E2E tests; the port is shared.)
+    reuseExistingServer: false,
+    env: { VITE_FORCE_LOCAL_DEMO: 'true' },
     timeout: 60_000,
   },
 });
