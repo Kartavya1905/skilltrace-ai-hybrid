@@ -8,14 +8,21 @@ import { expect, test, type Page } from '@playwright/test';
 const url = process.env.SMOKE_URL;
 test.skip(!url, 'Set SMOKE_URL to the deployed origin');
 
-/** Page errors and console errors, minus Google's own report-only notice for the reCAPTCHA frame. */
+/**
+ * Uncaught exceptions in the app, plus console errors logged by SkillTrace's own origin.
+ * Third-party frames (Google's reCAPTCHA iframe) log browser-policy notices such as
+ * "requestStorageAccess: Permission denied" or report-only CSP warnings; those are not app errors.
+ */
 function collectErrors(page: Page) {
   const errors: string[] = [];
+  const own = new URL(url!).origin;
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {
     if (m.type() !== 'error') return;
+    const from = m.location().url;
+    if (from && !from.startsWith(own)) return;
     const text = m.text();
-    if (/report-only Content Security Policy/i.test(text)) return;
+    if (/report-only Content Security Policy|requestStorageAccess/i.test(text)) return;
     errors.push(`console: ${text}`);
   });
   return errors;
