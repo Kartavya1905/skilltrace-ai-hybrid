@@ -31,19 +31,21 @@ Phase 8 (integration, security, docs) is complete in code. What remains needs ow
 Milestones M1–M6 are in docs/pipeline-milestones.md.
 
 - **M1 (CI quality gate): done.** `.github/workflows/ci.yml` passed all three jobs (quality, Firestore rules, E2E) on GitHub, run 45315453716, 2026-11-23.
-- **M2 (Firebase project and config): nearly done.** `skilltrace-hybrid-2026` ("SkillTrace AI Hybrid", Spark plan) is this version's own project, separate from the Codex version.
+- **M2 (Firebase project and config): done 2026-11-24.** `skilltrace-hybrid-2026` ("SkillTrace AI Hybrid", Spark plan) is this version's own project, separate from the Codex version.
   - Web app: **SkillTrace Hybrid Web** (`…af84170287ba`). The first app, SkillTrace AI Web, is unused and can be deleted.
   - Firestore `(default)` in nam5, with this repo's rules and indexes.
   - Auth: Google and Email/Password enabled. AI Logic: Gemini Developer API.
   - App Check: Fraud Defense key "SkillTrace Hybrid Web", created in this project with the reCAPTCHA Enterprise API enabled.
   - Verified 2026-11-24 on localhost: an App Check token was issued, and a cloud `generateContent` call succeeded with `inferenceSource: in_cloud`.
-  - Remaining: sign in, finish a Learning Lab session, and confirm it is saved to Firestore and classified.
+  - Verified end to end with the owner signed in. Two Learning Lab video sessions were saved under `users/<uid>/learning_sessions`, with their events, sources, skills and inference logs. One had 64.1 s eligible time.
+  - Both sessions are classified as Python by the **on-device** model: `classifiedBy.source: "on_device"`, mode `only_on_device`, model "Chrome built-in model via Prompt API", in 8.7 s and 25.5 s. This confirms that live hybrid on-device inference works.
+  - The earlier cloud path was verified as well: `inferenceSource: in_cloud`.
 
 ## Open blockers (owner action needed)
 
-1. **M2 end-to-end check.** Sign in at http://localhost:5310, finish a Lab session, and confirm it is saved and classified.
+1. **M3 continuous deployment.** Deploy Hosting from CI. Needs a deploy service-account secret from the owner.
 
-2. **Live hybrid verification.** On Chrome 139+ with the Prompt API flag, open Hybrid AI and run all three modes; confirm the on-device badge appears.
+2. **Live hybrid verification.** On-device and cloud are both confirmed on localhost (2026-11-24). Re-check on the deployed site in M5.
 3. **Deploy.** `pnpm build:web && npx firebase deploy --only firestore:rules,firestore:indexes,hosting`, then rebuild the extension with the hosted origin.
 4. **YouTube demo (under 3 min).** The public repository is live at https://github.com/Kartavya1905/skilltrace-ai-hybrid. The demo script is in docs/hackathon-submission.md.
 
