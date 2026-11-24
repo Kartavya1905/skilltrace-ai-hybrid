@@ -42,20 +42,18 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
 
   Then: sign in, finish a Lab session, and confirm it was saved and classified.
 
-  Owner console steps still open:
-  - enable Google and Email/Password sign-in
-  - add `localhost` as an authorized domain
-  - register the App Check debug token
-  - confirm the Gemini Developer API in AI Logic
-
-  Then: sign in, finish a Lab session, and confirm it was saved and classified.
-
 ## Open blockers (owner action needed)
 
-1. **Firebase project.** Create it, enable Auth (Google and Email), Firestore, AI Logic (Gemini Developer API) and App Check (reCAPTCHA v3), then fill in `apps/web/.env.local`. See docs/deployment.md.
+1. **Firebase console steps for `skilltrace-hybrid-2026`.** The project, web app and Firestore already exist. Still needed:
+   - enable Auth (Google and Email)
+   - enable AI Logic (Gemini Developer API)
+   - set up App Check (reCAPTCHA v3), then add the site key and debug token to `apps/web/.env.local`
+
+   See docs/deployment.md.
+
 2. **Live hybrid verification.** On Chrome 139+ with the Prompt API flag, open Hybrid AI and run all three modes; confirm the on-device badge appears.
 3. **Deploy.** `pnpm build:web && npx firebase deploy --only firestore:rules,firestore:indexes,hosting`, then rebuild the extension with the hosted origin.
-4. **Public GitHub repository and YouTube demo (under 3 min).** The script is in docs/hackathon-submission.md.
+4. **YouTube demo (under 3 min).** The public repository is live at https://github.com/Kartavya1905/skilltrace-ai-hybrid. The demo script is in docs/hackathon-submission.md.
 
 ## Next executable task
 
