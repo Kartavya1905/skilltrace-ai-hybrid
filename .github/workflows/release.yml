@@ -1,0 +1,72 @@
+# M4 - Extension release. Pushing a tag like v0.2.0 runs CI, builds the Chrome extension for the
+# hosted dashboard with that version, and publishes the zip on a GitHub Release.
+# Needs the FIREBASE_WEB_ENV variable (for the project ID). No secrets.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  extension:
+    name: Build and publish extension
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Resolve version and dashboard origins
+        id: meta
+        env:
+          FIREBASE_WEB_ENV: ${{ vars.FIREBASE_WEB_ENV }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Tag must look like v1.2.3"; exit 1; }
+          project=$(printf '%s\n' "$FIREBASE_WEB_ENV" | grep -E '^VITE_FIREBASE_PROJECT_ID=' | cut -d= -f2 | tr -d '\r')
+          [ -n "$project" ] || { echo "::error::Variable FIREBASE_WEB_ENV is missing VITE_FIREBASE_PROJECT_ID"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "project=$project" >> "$GITHUB_OUTPUT"
+          echo "origins=https://$project.web.app,https://$project.firebaseapp.com,http://localhost:5310" >> "$GITHUB_OUTPUT"
+      - name: Build extension
+        env:
+          SKILLTRACE_VERSION: ${{ steps.meta.outputs.version }}
+          SKILLTRACE_DASHBOARD_ORIGINS: ${{ steps.meta.outputs.origins }}
+        run: pnpm build:extension
+      - run: pnpm package:extension
+      - name: Check the zip
+        run: unzip -t "apps/extension/release/skilltrace-extension-v${{ steps.meta.outputs.version }}.zip"
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          PROJECT: ${{ steps.meta.outputs.project }}
+        run: |
+          cat > notes.md <<EOF
+          SkillTrace AI Chrome extension ${VERSION}, built for the dashboard at https://${PROJECT}.web.app.
+
+          **Install (unpacked):**
+          1. Download \`skilltrace-extension-v${VERSION}.zip\` below and unzip it.
+          2. Open \`chrome://extensions\`, turn on **Developer mode**, click **Load unpacked**, and pick the unzipped folder.
+          3. The extension ID is always \`kecllpafndpfocijmodnoilonglpkjcf\`, so the dashboard finds it with no setup.
+          4. In the popup, turn tracking on and approve the learning sites you want tracked. Nothing is tracked until you do.
+
+          Built from ${GITHUB_SHA::7} after CI passed.
+          EOF
+          gh release create "$GITHUB_REF_NAME" \
+            "apps/extension/release/skilltrace-extension-v${VERSION}.zip" \
+            --title "SkillTrace AI ${GITHUB_REF_NAME}" --notes-file notes.md --verify-tag

@@ -86,12 +86,27 @@ Preview channels run on hosts like `<project>--pr12-….web.app`. Those hosts ar
 
 ## 4. Chrome extension for the hosted dashboard
 
+The extension's ID is pinned to `kecllpafndpfocijmodnoilonglpkjcf` on every install. The manifest `key` comes from `apps/extension/extension-key.json`, which holds only a public key. The dashboard therefore reaches the extension with no ID setup.
+
+**Release (recommended):** push a version tag. `.github/workflows/release.yml` then does the following:
+
+1. Runs CI.
+2. Builds the extension for `https://<project>.web.app`, `https://<project>.firebaseapp.com` and `http://localhost:5310`.
+3. Stamps the tag's version into the extension.
+4. Publishes `skilltrace-extension-v<version>.zip` on a GitHub Release.
+
 ```bash
-# PowerShell
-$env:SKILLTRACE_DASHBOARD_ORIGINS="https://YOUR-PROJECT.web.app,http://localhost:5310"; pnpm build:extension
+git tag v0.2.0 && git push origin v0.2.0
 ```
 
-Load `apps/extension/dist` unpacked. To distribute, zip the `dist` folder. Chrome Web Store listing is optional; judges can load it unpacked.
+**Local build:**
+
+```powershell
+$env:SKILLTRACE_DASHBOARD_ORIGINS="https://YOUR-PROJECT.web.app,http://localhost:5310"; $env:SKILLTRACE_VERSION="0.2.0"
+pnpm build:extension; pnpm package:extension   # zip in apps/extension/release/
+```
+
+To install, unzip the file (or use `apps/extension/dist`), open `chrome://extensions`, turn on Developer mode, and click **Load unpacked**. A Chrome Web Store listing is optional; judges can load the extension unpacked.
 
 ## 5. Emulators (optional)
 

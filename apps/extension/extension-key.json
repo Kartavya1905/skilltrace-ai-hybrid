@@ -1,0 +1,5 @@
+{
+  "note": "Public key only. Pins the unpacked extension ID; the private key was never stored (not needed for unpacked installs).",
+  "id": "kecllpafndpfocijmodnoilonglpkjcf",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjdQrhQW4R8gEH/mapC9iZ1nIQlymgftgDAhJnhEBGIkGJtTyGxuLDusmcd801yYdrqmfqa3a8LXX6L66nMDAQGjKmjq4VNrM3Dv8Kk1RzhVeH2FPLv2Gl+jO0/M+Pe/cbnFXpNb7ELj0zZcuuMRiMK70792k9UEcuFJka7EjgBCDaPUULozvedvSW7hk9KLFngBLUYfWRy+lx7Q/1lPVM99brpu8t5TYbQUfKTVKqXm7QvHFldhnDA5SvvEP50NWS2RK2KEqoz4R8UAHdqFC9Wxz8LomZiUHzEs/xepzAvemtTCanBvv/2kK6VgLJpGyZNDBTc0F+TdZEvlgQGc1LwIDAQAB"
+}

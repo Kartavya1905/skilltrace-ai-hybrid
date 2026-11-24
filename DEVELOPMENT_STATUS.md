@@ -46,9 +46,15 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
 
   The live release on https://skilltrace-hybrid-2026.web.app is labelled "GitHub Actions edbb00a" and was released by the `github-deploy` service account. App Check on the live domain was verified earlier (an Enterprise token was exchanged with HTTP 200). From now on, every push to `main` deploys automatically after CI passes, and same-repository PRs get a 7-day preview.
 
+- **M4 (extension release): built, not yet released.**
+  - Extension ID pinned to `kecllpafndpfocijmodnoilonglpkjcf` through the manifest `key` (public key only). The dashboard falls back to it.
+  - `SKILLTRACE_VERSION` stamps the version, and `pnpm package:extension` writes a deterministic zip with a dependency-free writer.
+  - `.github/workflows/release.yml`: a `v*.*.*` tag runs CI, builds for the hosted origins, and publishes the zip on a GitHub Release.
+  - Verified locally: a 0.2.0 build zipped 12 files, Windows unzip works, and `externally_connectable` lists web.app, firebaseapp.com and localhost.
+
 ## Open blockers (owner action needed)
 
-1. **M4 extension release.** Build the extension with the hosted origin and publish the zip on a GitHub Release.
+1. **M4 extension release.** Push tag `v0.2.0` (owner approval), then load the zip from the Release and sync it with the live dashboard.
 
 2. **Live hybrid verification.** On-device and cloud are both confirmed on localhost (2026-11-24). Re-check on the deployed site in M5.
 3. **Deploy.** `pnpm build:web && npx firebase deploy --only firestore:rules,firestore:indexes,hosting`, then rebuild the extension with the hosted origin.

@@ -14,6 +14,7 @@
     "build": "pnpm --filter @skilltrace/web build && pnpm --filter @skilltrace/extension build",
     "build:web": "pnpm --filter @skilltrace/web build",
     "build:extension": "pnpm --filter @skilltrace/extension build",
+    "package:extension": "node scripts/package-extension.mjs",
     "typecheck": "pnpm -r run typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",

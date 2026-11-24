@@ -5,6 +5,7 @@
  * reconstructs totals with the same tracking engine, stores them (idempotent ids), then ACKs.
  */
 import {
+  SKILLTRACE_EXTENSION_ID,
   SessionMetaSchema,
   validateEvents,
   type LearningEvent,
@@ -30,7 +31,11 @@ function runtime(): ChromeRuntime | null {
 export function getExtensionId(): string {
   const fromUrl = new URLSearchParams(location.search).get('ext');
   if (fromUrl && /^[a-p]{32}$/.test(fromUrl)) localStorage.setItem(EXTENSION_ID_KEY, fromUrl);
-  return localStorage.getItem(EXTENSION_ID_KEY) ?? import.meta.env.VITE_EXTENSION_ID ?? '';
+  return (
+    localStorage.getItem(EXTENSION_ID_KEY) ||
+    import.meta.env.VITE_EXTENSION_ID ||
+    SKILLTRACE_EXTENSION_ID
+  );
 }
 
 export function setExtensionId(id: string) {
