@@ -8,6 +8,7 @@ async function render() {
   $<HTMLInputElement>('enabled').checked = s.trackingEnabled;
   $<HTMLInputElement>('paused').checked = s.paused;
   $<HTMLInputElement>('demo').checked = s.demoMode;
+  $<HTMLInputElement>('speech').checked = s.speechDetection;
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const origin = tab?.url ? originOf(tab.url) : null;
@@ -66,6 +67,7 @@ for (const [id, key] of [
   ['enabled', 'trackingEnabled'],
   ['paused', 'paused'],
   ['demo', 'demoMode'],
+  ['speech', 'speechDetection'],
 ] as const) {
   $<HTMLInputElement>(id).addEventListener('change', async (e) => {
     await send({

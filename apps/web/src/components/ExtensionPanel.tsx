@@ -8,13 +8,14 @@ import {
   setExtensionId,
   type ExtensionStatus,
 } from '../lib/extension';
-import { saveSession, trackingOptions } from '../lib/actions';
+import { saveSession, trackingOptions, withSpokenText } from '../lib/actions';
 import { reconstructSession } from '@skilltrace/tracking-engine';
+import type { LearningSource } from '@skilltrace/shared';
 import { Badge, Button, Field, inputCls } from './ui';
 
 /** Connect to the extension, show its status, and import finished sessions. */
 export function ExtensionPanel({ compact = false }: { compact?: boolean }) {
-  const { store, prefs, data } = useApp();
+  const { store, prefs, data, ai } = useApp();
   const [id, setId] = useState(getExtensionId());
   const [status, setStatus] = useState<ExtensionStatus | null>(null);
   const [error, setError] = useState('');
@@ -40,18 +41,39 @@ export function ExtensionPanel({ compact = false }: { compact?: boolean }) {
     try {
       const sessions = await pullSessions();
       let rejected = 0;
+      let transcribed = 0;
       for (const s of sessions) {
         const result = reconstructSession(
           s.meta,
           s.events,
           trackingOptions(prefs, data, s.meta.pageId),
         );
-        await saveSession(store, s.meta, result, s.events);
+        // Speech-based detection: transcribe the clips once (on-device first), keep only text.
+        let meta = s.meta;
+        let speech: LearningSource['speech'];
+        if (s.speech.length && ai) {
+          const t = await ai.transcribeSpeech(s.speech);
+          if (t.ok && t.output.transcript.trim()) {
+            meta = { ...meta, excerpt: withSpokenText(meta.excerpt, t.output.transcript) };
+            speech = {
+              source: t.source,
+              model: t.model,
+              clips: s.speech.length,
+              durationMs: t.durationMs,
+              at: t.timestamp,
+            };
+            transcribed++;
+          }
+        }
+        await saveSession(store, meta, result, s.events, 'auto_recorded', { speech });
         rejected += s.rejected;
       }
       await ackSessions(sessions.map((s) => s.meta.sessionId));
       setMessage(
-        `Imported ${sessions.length} session(s)${rejected ? `, rejected ${rejected} invalid event(s)` : ''}.`,
+        `Imported ${sessions.length} session(s)` +
+          (transcribed ? `, ${transcribed} with speech transcribed` : '') +
+          (rejected ? `, rejected ${rejected} invalid event(s)` : '') +
+          '.',
       );
       await refresh();
     } catch (e) {

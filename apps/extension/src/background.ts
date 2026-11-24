@@ -5,7 +5,12 @@
  *  - Answers the dashboard over externally_connectable; Chrome only delivers messages from the
  *    origins in the manifest, and we re-check the sender origin here.
  */
-import { LearningEventSchema, SessionMetaSchema } from '@skilltrace/shared';
+import {
+  LearningEventSchema,
+  MAX_SPEECH_CLIPS,
+  SessionMetaSchema,
+  SpeechClipSchema,
+} from '@skilltrace/shared';
 import { deleteSession, eventsFor, getSessions, putEvents, putSession } from './db';
 import {
   DEFAULT_SETTINGS,
@@ -125,6 +130,18 @@ async function handleInternal(
       }
       return { ok: true, stored: valid.length };
     }
+    case 'speech': {
+      if (!settings.trackingEnabled || settings.paused || !settings.speechDetection)
+        return { ok: false };
+      const senderOrigin = sender.url ? new URL(sender.url).origin : '';
+      const clip = SpeechClipSchema.safeParse(msg.clip);
+      const s = (await getSessions()).find((x) => x.meta.sessionId === msg.sessionId);
+      // Only the origin that opened the session may add clips, and only up to the limit.
+      if (!clip.success || !s || s.meta.origin !== senderOrigin) return { ok: false };
+      if ((s.speech?.length ?? 0) >= MAX_SPEECH_CLIPS) return { ok: false, error: 'limit' };
+      await putSession({ ...s, speech: [...(s.speech ?? []), clip.data] });
+      return { ok: true };
+    }
     case 'closeSession': {
       const s = (await getSessions()).find((x) => x.meta.sessionId === msg.sessionId);
       if (s) await putSession({ ...s, closed: true });
@@ -182,7 +199,11 @@ async function handleExternal(msg: ExternalMessage): Promise<unknown> {
       const sessions = await pendingSessions();
       return {
         sessions: await Promise.all(
-          sessions.map(async (s) => ({ meta: s.meta, events: await eventsFor(s.meta.sessionId) })),
+          sessions.map(async (s) => ({
+            meta: s.meta,
+            events: await eventsFor(s.meta.sessionId),
+            speech: s.speech ?? [],
+          })),
         ),
       };
     }

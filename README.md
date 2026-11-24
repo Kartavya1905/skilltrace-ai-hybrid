@@ -22,7 +22,8 @@ Built for Google **#BuildHybridAI 2026**.
 - **Randomized engagement verification.** Video checks come every 5–90 minutes of playback, with 30 s to respond. A missed check marks only the interval since the last verified point as unverified, and the raw log is kept. DEMO mode shortens the intervals without touching production defaults.
 - **Hybrid AI that tells the truth.** Every AI feature goes through `firebase/ai`. The source badge reads the SDK's own `response.inferenceSource`. The app never guesses the source and never invents a result.
 - **Privacy guard.** We found that `firebase/ai` sends even `ONLY_ON_DEVICE` requests to the cloud when Chrome's Prompt API is missing. SkillTrace refuses on-device-only calls in that case, and throws away any on-device-only result the SDK reports as cloud.
-- **Chrome MV3 extension.** Opt-in, per-site optional host permissions, local IndexedDB event log, crash-safe checkpoints, and pull/ack sync with the dashboard over `externally_connectable`.
+- **Chrome MV3 extension.** Opt-in, per-site optional host permissions, local IndexedDB event log, crash-safe checkpoints, and pull/ack sync with the dashboard over `externally_connectable`. On single-page video sites such as YouTube, each video becomes its own session with its own title and description. Ads are never credited.
+- **Speech-based skill detection (opt-in).** Short clips from the watched video, never the microphone, are transcribed on-device by Gemini Nano through the Prompt API audio input. The cloud is used only with your consent. What is _said_ then drives skill detection: a video titled "Lecture 7" whose audio is about `SELECT` queries is classified as SQL.
 - **Skill Passport.** You choose exactly which skills, projects, sources and dates are public. Every claim carries its evidence type. You can revoke the link or print the passport.
 
 ## Repository layout

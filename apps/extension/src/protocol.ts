@@ -1,5 +1,5 @@
 /** Messages between content script, popup, background service worker and the dashboard. */
-import type { LearningEvent, SessionMeta } from '@skilltrace/shared';
+import type { LearningEvent, SessionMeta, SpeechClip } from '@skilltrace/shared';
 
 export interface ExtensionSettings {
   trackingEnabled: boolean; // opt-in, default false
@@ -8,6 +8,11 @@ export interface ExtensionSettings {
   responseWindowMultiplier: number;
   readingWpm: number;
   creditHiddenVideo: boolean;
+  /**
+   * Opt-in, default false: record up to three short audio clips from the tracked video/audio
+   * element (never the microphone) so the dashboard can detect skills from what is said.
+   */
+  speechDetection: boolean;
   origins: string[]; // approved origins, e.g. "https://docs.python.org"
 }
 
@@ -18,6 +23,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   responseWindowMultiplier: 1,
   readingWpm: 238,
   creditHiddenVideo: false,
+  speechDetection: false,
   origins: [],
 };
 
@@ -27,6 +33,7 @@ export type InternalMessage =
   | { type: 'meta'; meta: SessionMeta }
   | { type: 'events'; events: LearningEvent[] }
   | { type: 'closeSession'; sessionId: string }
+  | { type: 'speech'; sessionId: string; clip: SpeechClip }
   | { type: 'addOrigin'; origin: string }
   | { type: 'removeOrigin'; origin: string }
   | { type: 'updateSettings'; patch: Partial<ExtensionSettings> }
@@ -45,6 +52,8 @@ export interface StoredSession {
   tabId: number;
   lastEventAt: number;
   closed: boolean;
+  /** Speech clips for this session (only with speechDetection on); deleted on ack. */
+  speech?: SpeechClip[];
 }
 
 /** Sessions idle this long are treated as finished and offered to the dashboard. */

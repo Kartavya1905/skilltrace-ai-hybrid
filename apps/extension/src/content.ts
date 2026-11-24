@@ -3,7 +3,9 @@
  * when tracking is enabled and not paused.
  *
  * Collected: page title, privacy-preserving page id, origin+path (no query/fragment), content type,
- * word count, a short text excerpt from the main content, and media/scroll/visibility events.
+ * word count, a short text excerpt (for videos: the page's own description of the video), and
+ * media/scroll/visibility events. With the opt-in speech setting: up to three short audio clips
+ * taken from the tracked media element itself, never the microphone (see speech.ts).
  * Never collected: keystrokes, form-field values, passwords, clipboard, microphone, camera, screen.
  * Page text is treated as data only.
  */
@@ -19,6 +21,7 @@ import {
 } from '@skilltrace/tracking-engine';
 import { bindMediaElement, bindReading } from '@skilltrace/tracking-engine/dom';
 import type { ExtensionSettings, InternalMessage } from './protocol';
+import { DEMO_SPEECH_PLAN, SPEECH_PLAN, recordSpeech } from './speech';
 
 const send = <T>(msg: InternalMessage) => chrome.runtime.sendMessage(msg) as Promise<T>;
 
@@ -143,6 +146,23 @@ function showCheck(check: CheckRequest, onRespond: () => void): () => void {
   };
 }
 
+/**
+ * The page's own description of its content. YouTube keeps it in the watch-page DOM (its <meta>
+ * description goes stale after in-page navigation); other sites use their meta tags.
+ */
+function pageDescription(): string {
+  const yt = document.querySelector<HTMLElement>(
+    'ytd-watch-metadata #description-inline-expander, ytd-watch-metadata #description',
+  );
+  const isYouTube = /(^|\.)youtube\.com$/.test(location.hostname);
+  const meta = isYouTube
+    ? ''
+    : document.querySelector<HTMLMetaElement>(
+        'meta[property="og:description"], meta[name="description"]',
+      )?.content;
+  return (yt?.innerText || meta || '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+}
+
 async function main() {
   if (window.top !== window) return; // top frame only
   if (document.querySelector('meta[name="skilltrace:first-party-tracking"]')) return; // dashboard tracks itself
@@ -151,7 +171,12 @@ async function main() {
     return;
   const opts = trackingOptions(settings);
   const queue = makeQueue();
-  const started = new WeakSet<HTMLMediaElement>();
+  const bound = new WeakSet<HTMLMediaElement>();
+  const speechPlan = settings.demoMode ? DEMO_SPEECH_PLAN : SPEECH_PLAN;
+
+  /** Every live session's stop function; leaving the page ends them all. */
+  const active = new Set<() => void>();
+  window.addEventListener('pagehide', () => [...active].forEach((stop) => stop()));
 
   const baseMeta = (
     contentType: SessionMeta['contentType'],
@@ -172,12 +197,16 @@ async function main() {
     ...extra,
   });
 
+  /** Starts a tracked session and returns a stop function that ends it (safe to call twice). */
   function run(
     meta: SessionMeta,
     attach: (s: TrackedSession) => () => void,
     media?: HTMLMediaElement,
-  ) {
+  ): () => void {
     let hide: (() => void) | null = null;
+    let detach: (() => void) | null = null;
+    let tick: ReturnType<typeof setInterval> | null = null;
+    let stopped = false;
     const session = new TrackedSession(meta, opts, {
       persist: (e) => queue.push(e),
       onCheck: (c) => (hide = showCheck(c, () => session.respond(c.checkId))),
@@ -187,47 +216,100 @@ async function main() {
         if (outcome === 'missed') media?.pause(); // stop crediting until the learner resumes
       },
     });
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      active.delete(stop);
+      if (tick) clearInterval(tick);
+      detach?.();
+      hide?.();
+      queue.flush();
+      void send({ type: 'closeSession', sessionId: meta.sessionId });
+    };
+    active.add(stop);
     void send({ type: 'meta', meta }).then(() => {
-      const detach = attach(session);
-      const tick = setInterval(() => session.tick(), 1_000);
-      window.addEventListener('pagehide', () => {
-        clearInterval(tick);
-        detach();
-        queue.flush();
-        void send({ type: 'closeSession', sessionId: meta.sessionId });
-      });
+      if (stopped) return;
+      detach = attach(session);
+      tick = setInterval(() => session.tick(), 1_000);
     });
+    return stop;
   }
 
   const excerpt = (mainContainer().innerText ?? '').replace(/\s+/g, ' ').slice(0, 1500);
 
+  /** YouTube-style players: an ad is playing in the same <video> element. */
+  const adPlaying = () => !!document.querySelector('.ad-showing, .ad-interrupting');
+
+  /**
+   * One session per piece of content. Sites like YouTube swap videos inside the same <video>
+   * element without a page load, so a new source (new page ID or duration) ends the current
+   * session and starts a new one with the new title and description.
+   */
   function trackMedia(el: HTMLMediaElement) {
-    if (started.has(el)) return;
-    const begin = () => {
-      if (started.has(el) || !Number.isFinite(el.duration) || el.duration < MIN_MEDIA_SECONDS)
-        return;
-      started.add(el);
+    if (bound.has(el)) return;
+    bound.add(el);
+    let current: { key: string; stop: () => void } | null = null;
+    let pending: ReturnType<typeof setTimeout> | null = null;
+    const keyNow = () => `${pageIdFromUrl(location.href)}|${Math.round(el.duration)}`;
+
+    const end = () => {
+      if (pending) clearTimeout(pending);
+      pending = null;
+      current?.stop();
+      current = null;
+    };
+
+    const start = (key: string) => {
       const kind = el instanceof HTMLVideoElement ? 'video' : 'audio';
+      const description = pageDescription();
       const captions = Array.from(el.querySelectorAll('track'))
         .map((t) => t.label)
         .join(', ');
-      run(
-        baseMeta(kind, {
-          durationSec: el.duration,
-          excerpt: `${captions}\n${excerpt}`.trim().slice(0, 1500),
-        }),
+      const meta = baseMeta(kind, {
+        durationSec: el.duration,
+        ...(description ? { description } : {}),
+        // The description is about this video; the rest of the page may be unrelated sidebars.
+        excerpt: (description || `${captions}\n${excerpt}`).trim().slice(0, 1500),
+      });
+      const stop = run(
+        meta,
         (s) => {
           // Media may already be playing when we attach.
           if (!el.paused)
             s.media('play', { pos: el.currentTime, rate: el.playbackRate, duration: el.duration });
-          return bindMediaElement(el, s);
+          const unbind = bindMediaElement(el, s);
+          const stopSpeech = settings.speechDetection
+            ? recordSpeech(el, speechPlan, (clip) => {
+                void send({ type: 'speech', sessionId: meta.sessionId, clip });
+              })
+            : () => {};
+          return () => {
+            stopSpeech();
+            unbind();
+          };
         },
         el,
       );
+      current = { key, stop };
     };
-    if (el.readyState >= 1) begin();
-    el.addEventListener('loadedmetadata', begin);
-    el.addEventListener('play', begin);
+
+    const sync = () => {
+      if (adPlaying()) return end(); // ads are never credited or classified
+      if (!Number.isFinite(el.duration) || el.duration < MIN_MEDIA_SECONDS) return;
+      const key = keyNow();
+      if (current?.key === key || pending) return;
+      end();
+      // Wait a moment: single-page sites update the title and description after the switch.
+      pending = setTimeout(() => {
+        pending = null;
+        if (!adPlaying() && keyNow() === key && !current) start(key);
+      }, 1_200);
+    };
+
+    for (const ev of ['loadedmetadata', 'durationchange', 'play', 'playing'])
+      el.addEventListener(ev, sync);
+    el.addEventListener('emptied', end); // source removed, e.g. moving to another video
+    sync();
   }
 
   document.querySelectorAll('video, audio').forEach((m) => trackMedia(m as HTMLMediaElement));

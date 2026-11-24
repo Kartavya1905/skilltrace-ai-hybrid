@@ -13,7 +13,7 @@ import {
   type HybridParams,
 } from 'firebase/ai';
 import { JSON_SCHEMAS, type TaskName } from './schemas';
-import type { InferenceModeValue, ModelFactory, ModelHandle } from './service';
+import type { AudioInput, InferenceModeValue, ModelFactory, ModelHandle } from './service';
 
 export const DEFAULT_CLOUD_MODEL = 'gemini-3.5-flash-lite';
 
@@ -43,7 +43,7 @@ export function hybridParamsFor(
         responseMimeType: 'application/json',
         responseJsonSchema: schema,
         temperature: 0.2,
-        maxOutputTokens: 600,
+        maxOutputTokens: task === 'transcribe' ? 2000 : 600,
       },
     },
     onDeviceParams: {
@@ -55,6 +55,14 @@ export function hybridParamsFor(
       promptOptions: { responseConstraint: schema },
     },
   };
+}
+
+interface PromptApi {
+  availability(options: unknown): Promise<string>;
+  create(options: unknown): Promise<{
+    prompt(input: unknown): Promise<string>;
+    destroy?(): void;
+  }>;
 }
 
 export class FirebaseModelFactory implements ModelFactory {
@@ -71,6 +79,46 @@ export class FirebaseModelFactory implements ModelFactory {
 
   onDeviceApiPresent(): boolean {
     return typeof (globalThis as { LanguageModel?: unknown }).LanguageModel !== 'undefined';
+  }
+
+  /**
+   * Speech transcription with Chrome's on-device model through the Prompt API's audio input.
+   * firebase/ai's on-device adapter only accepts text and images, so audio goes to the Prompt API
+   * directly; the caller labels the result on_device because this path never leaves the browser.
+   */
+  async onDeviceAudio(instruction: string, clips: AudioInput[]): Promise<string> {
+    const LM = (globalThis as unknown as { LanguageModel?: PromptApi }).LanguageModel;
+    const unsupported = (message: string) =>
+      Object.assign(new Error(message), { code: 'unsupported' });
+    if (!LM) throw unsupported('Chrome built-in AI (Prompt API) is not available.');
+    const options = {
+      expectedInputs: [{ type: 'text', languages: ['en'] }, { type: 'audio' }],
+      expectedOutputs: [{ type: 'text', languages: ['en'] }],
+    };
+    const availability = await LM.availability(options);
+    if (availability !== 'available')
+      throw unsupported(`On-device audio input is "${availability}" in this browser.`);
+    const session = await LM.create(options);
+    try {
+      const parts: string[] = [];
+      for (const clip of clips) {
+        const bytes = Uint8Array.from(atob(clip.data), (c) => c.charCodeAt(0));
+        const audio = new Blob([bytes], { type: clip.mimeType });
+        const text = await session.prompt([
+          {
+            role: 'user',
+            content: [
+              { type: 'text', value: instruction },
+              { type: 'audio', value: audio },
+            ],
+          },
+        ]);
+        parts.push(text.trim());
+      }
+      return parts.filter(Boolean).join(' ');
+    } finally {
+      session.destroy?.();
+    }
   }
 
   model(task: TaskName, mode: InferenceModeValue): ModelHandle {

@@ -98,12 +98,23 @@ export function sourceIdFor(meta: SessionMeta): string {
  * Persist one session (idempotent: ids derive from the session id). Events are stored first, so
  * the summary can always be reconstructed from them.
  */
+/**
+ * Puts what was said in the video first: it is the strongest skill signal. The transcript is
+ * untrusted content like any page text (prompts fence it as data).
+ */
+export function withSpokenText(excerpt: string, transcript: string): string {
+  const spoken = transcript.replace(/\s+/g, ' ').trim().slice(0, 900);
+  if (!spoken) return excerpt.slice(0, 1500);
+  return `Spoken in the video: ${spoken}\n\n${excerpt}`.trim().slice(0, 1500);
+}
+
 export async function saveSession(
   store: DataStore,
   meta: SessionMeta,
   result: SessionResult,
   events: LearningEvent[],
   provenance: 'auto_recorded' | 'sample_data' = 'auto_recorded',
+  extras: { speech?: LearningSource['speech'] } = {},
 ): Promise<void> {
   const uid = store.uid;
   if (events.length) {
@@ -132,6 +143,8 @@ export async function saveSession(
     wordCount: meta.wordCount,
     durationSec: meta.durationSec,
     excerpt: meta.excerpt.slice(0, 1500),
+    ...(meta.description ? { description: meta.description.slice(0, 2000) } : {}),
+    ...(extras.speech ? { speech: extras.speech } : {}),
   };
   await store.put('learning_sources', source);
   const session: LearningSession = {

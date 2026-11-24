@@ -102,6 +102,19 @@ export interface LearningSource extends BaseRecord {
   wordCount: number;
   durationSec: number; // media duration, 0 for reading
   excerpt: string; // short, permitted excerpt used for classification
+  /** The page's own description of the content, when it has one (e.g. YouTube). */
+  description?: string;
+  /**
+   * How the spoken content was transcribed, when speech-based detection was on. The audio itself
+   * is never stored; only the short transcript inside `excerpt` is kept.
+   */
+  speech?: {
+    source: InferenceSourceLabel;
+    model: string;
+    clips: number;
+    durationMs: number;
+    at: string;
+  };
 }
 
 export type ClassificationStatus =

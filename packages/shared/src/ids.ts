@@ -32,13 +32,31 @@ export function eventId(sessionId: string, seq: number): string {
 }
 
 /**
- * Privacy-preserving page identifier: origin + pathname only (query and fragment dropped,
- * so tokens or search terms in URLs are never part of the ID), then hashed.
+ * Video sites that keep the content identity in the query string, e.g. every YouTube video is
+ * /watch?v=<id>. Only these named parameters are used, and only inside the hash.
+ */
+const CONTENT_ID_PARAMS: Record<string, string[]> = {
+  'www.youtube.com': ['v'],
+  'youtube.com': ['v'],
+  'm.youtube.com': ['v'],
+  'music.youtube.com': ['v'],
+};
+
+/**
+ * Privacy-preserving page identifier: origin + pathname, then hashed. Query and fragment are
+ * dropped (tokens or search terms never enter the ID), except a site's known content-ID parameter
+ * from CONTENT_ID_PARAMS, so two different YouTube videos get two different page IDs.
  */
 export function pageIdFromUrl(url: string): string {
   try {
     const u = new URL(url);
-    return `page_${hash53(`${u.origin}${u.pathname}`)}`;
+    const keys = CONTENT_ID_PARAMS[u.hostname] ?? [];
+    const identity = keys
+      .map((k) => [k, u.searchParams.get(k)] as const)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}=${v}`)
+      .join('&');
+    return `page_${hash53(`${u.origin}${u.pathname}${identity ? `?${identity}` : ''}`)}`;
   } catch {
     return `page_${hash53(url)}`;
   }

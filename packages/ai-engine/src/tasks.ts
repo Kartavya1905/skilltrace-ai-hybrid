@@ -21,8 +21,9 @@ import type {
   RepoSkills,
   SessionSummary,
   Topics,
+  Transcript,
 } from './schemas';
-import type { AIResult, HybridAIService } from './service';
+import type { AIResult, AudioInput, HybridAIService } from './service';
 
 export interface ContentInput {
   title: string;
@@ -44,6 +45,11 @@ export class SkillTraceAI {
     return this.allowCloudExcerpts()
       ? `${what}: the title and a short excerpt (up to 800 characters) of the material.`
       : `${what}: the title only (sending excerpts is turned off in Privacy settings).`;
+  }
+
+  /** Speech-based skill evidence: transcribe short clips from the watched video (see service). */
+  transcribeSpeech(clips: AudioInput[]): Promise<AIResult<Transcript>> {
+    return this.service.transcribe(clips);
   }
 
   classifySkills(input: ContentInput): Promise<AIResult<Classification>> {

@@ -108,9 +108,34 @@ export const SessionMetaSchema = z.object({
     .max(200),
   startedAt: z.number().int().positive(),
   device: z.enum(['extension', 'learning_lab']),
+  /** The page's own description of the content (e.g. a YouTube video description). */
+  description: z.string().max(2000).optional(),
 });
 
 export type SessionMeta = z.infer<typeof SessionMetaSchema>;
+
+/**
+ * A short audio clip recorded from the tracked video/audio element itself (never the microphone),
+ * only when the learner turned on speech-based skill detection. Used once for transcription by the
+ * dashboard, then discarded: clips are never written to Firestore.
+ */
+export const SpeechClipSchema = z.object({
+  /** Media position (seconds) where the clip starts. */
+  atSec: z.number().nonnegative(),
+  durationSec: z.number().positive().max(30),
+  mimeType: z.enum(['audio/webm', 'audio/ogg']),
+  /** Base64 audio. ~20 s of 32 kbps Opus is about 110 kB of base64. */
+  data: z
+    .string()
+    .min(16)
+    .max(400_000)
+    .regex(/^[A-Za-z0-9+/]+={0,2}$/),
+});
+
+export type SpeechClip = z.infer<typeof SpeechClipSchema>;
+
+/** At most this many clips per session. */
+export const MAX_SPEECH_CLIPS = 3;
 
 /** Deduplicate by id and order by (t, seq). Safe to call on any merged batch. */
 export function dedupeAndSort<T extends { id: string; t: number; seq: number }>(

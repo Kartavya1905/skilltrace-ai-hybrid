@@ -5,11 +5,14 @@
  * reconstructs totals with the same tracking engine, stores them (idempotent ids), then ACKs.
  */
 import {
+  MAX_SPEECH_CLIPS,
   SKILLTRACE_EXTENSION_ID,
   SessionMetaSchema,
+  SpeechClipSchema,
   validateEvents,
   type LearningEvent,
   type SessionMeta,
+  type SpeechClip,
 } from '@skilltrace/shared';
 
 export const EXTENSION_ID_KEY = 'skilltrace:extension-id';
@@ -76,13 +79,14 @@ export interface PulledSession {
   meta: SessionMeta;
   events: LearningEvent[];
   rejected: number;
+  /** Speech clips (only when speech detection is on); transcribed once, never stored. */
+  speech: SpeechClip[];
 }
 
 export async function pullSessions(): Promise<PulledSession[]> {
-  const res = await send<{ sessions?: { meta: unknown; events: unknown[] }[] }>(
-    { type: 'skilltrace.pull' },
-    10_000,
-  );
+  const res = await send<{
+    sessions?: { meta: unknown; events: unknown[]; speech?: unknown[] }[];
+  }>({ type: 'skilltrace.pull' }, 20_000);
   const out: PulledSession[] = [];
   for (const s of res.sessions ?? []) {
     const meta = SessionMetaSchema.safeParse(s.meta);
@@ -92,6 +96,10 @@ export async function pullSessions(): Promise<PulledSession[]> {
       meta: meta.data,
       events: accepted.filter((e) => e.sessionId === meta.data.sessionId),
       rejected,
+      speech: (Array.isArray(s.speech) ? s.speech : [])
+        .map((c) => SpeechClipSchema.safeParse(c))
+        .flatMap((r) => (r.success ? [r.data] : []))
+        .slice(0, MAX_SPEECH_CLIPS),
     });
   }
   return out;

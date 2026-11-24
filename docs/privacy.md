@@ -16,6 +16,16 @@ On an approved page SkillTrace may record:
 
 SkillTrace never records keystrokes, form-field values, passwords, clipboard, private messages, microphone, camera or screen. The content script ignores navigation, headers, forms and editable regions, and never changes the page's DOM. Page text is treated as data. Prompts fence it and tell the model never to follow instructions inside it.
 
+## Speech-based skill detection (opt-in, off by default)
+
+With **Detect skills from speech** on in the extension popup, the extension records at most three short audio clips per video session: about 20 seconds each, taken while the video plays.
+
+- **Where the audio comes from:** the tracked `<video>`/`<audio>` element itself, through `HTMLMediaElement.captureStream()`. Never the microphone, other tabs, or the screen. If a site serves cross-origin media without CORS, nothing can be captured and nothing is recorded.
+- **How clips travel:** clips sit in the extension's local IndexedDB until the dashboard syncs. The dashboard transcribes them once and the extension deletes them on acknowledgement. Audio is **never** written to Firestore.
+- **Who transcribes:** Chrome's on-device Gemini Nano does it first, through the Prompt API's audio input, so nothing leaves the browser. If that isn't available, the cloud model through Firebase AI Logic is used, but only under your cloud-AI setting. With "ask" you approve each upload, and the prompt states the clip count and length. With "deny" audio never leaves the device.
+- **What is kept:** a short transcript excerpt of up to 900 characters, stored in `learning_sources.excerpt`, plus `learning_sources.speech`, which records who transcribed it: `on_device` or `in_cloud` as reported, the model, the clip count and the time.
+- **How the transcript is treated:** as untrusted content, like page text. Prompts fence it as data, and anything said in a video is never followed as an instruction.
+
 ## When content leaves the device
 
 | Setting                            | Behaviour                                                                                                               |

@@ -11,16 +11,33 @@
  * Failures return an error result. A completed result is never fabricated.
  */
 import type { CloudAIConsent, InferenceSourceLabel } from '@skilltrace/shared';
-import { JSON_SCHEMAS, VALIDATORS, parseModelJson, type TaskName } from './schemas';
+import { TRANSCRIBE_INSTRUCTION } from './prompts';
+import {
+  JSON_SCHEMAS,
+  VALIDATORS,
+  parseModelJson,
+  type TaskName,
+  type Transcript,
+} from './schemas';
 
 /** Mirrors firebase/ai InferenceMode string values (verified against firebase 13.4.0 typings). */
 export type InferenceModeValue =
   'prefer_on_device' | 'only_on_device' | 'only_in_cloud' | 'prefer_in_cloud';
 
+/** A base64 audio clip (e.g. Opus in WebM) sent for transcription. */
+export interface AudioInput {
+  mimeType: string;
+  data: string;
+  durationSec: number;
+}
+
+/** Content parts accepted by firebase/ai generateContent. */
+export type PromptPart = { text: string } | { inlineData: { mimeType: string; data: string } };
+
 /** Minimal surface of firebase/ai GenerativeModel that the service relies on. */
 export interface ModelHandle {
   generateContent(
-    prompt: string,
+    prompt: string | PromptPart[],
   ): Promise<{ response: { text(): string; inferenceSource?: string } }>;
   initializeDeviceModel?(onDownloadProgress?: (progress: number) => void): Promise<void>;
 }
@@ -35,6 +52,8 @@ export interface ModelFactory {
    * The service therefore refuses on-device-only calls when this returns false.
    */
   onDeviceApiPresent(): boolean;
+  /** Transcribes audio with Chrome's on-device model (Prompt API audio input), if supported. */
+  onDeviceAudio?(instruction: string, clips: AudioInput[]): Promise<string>;
 }
 
 export type AIErrorKind =
@@ -301,6 +320,137 @@ export class HybridAIService {
       };
     }
     return this.log(await this.attempt<T>(task, 'only_in_cloud', prompts.cloud));
+  }
+
+  /**
+   * Speech transcription, routed like `run`: on-device first (Chrome's Prompt API with audio
+   * input); if that is unavailable, the cloud model through Firebase AI Logic, but only when the
+   * learner allows cloud AI ('allow', or 'ask' plus an explicit yes). 'deny' never uploads audio.
+   */
+  async transcribe(clips: AudioInput[]): Promise<AIResult<Transcript>> {
+    const task: TaskName = 'transcribe';
+    const consent = this.deps.consent();
+    const local = this.log(await this.transcribeOnDevice(clips));
+    if (local.ok || consent === 'deny') return local;
+    if (!this.deps.isOnline())
+      return {
+        ...local,
+        retryLater: true,
+        error: { kind: 'offline', code: 'offline', message: 'Offline; speech not transcribed.' },
+      };
+    if (consent === 'ask') {
+      const seconds = Math.round(clips.reduce((a, c) => a + c.durationSec, 0));
+      const granted =
+        (await this.deps.requestCloudConsent?.(
+          task,
+          `Speech transcription: ${clips.length} short audio clip(s), about ${seconds} seconds in total, ` +
+            "taken from the video you watched, are sent to Google's cloud model through Firebase AI Logic " +
+            'to be transcribed. SkillTrace keeps only a short transcript excerpt, never the audio.',
+        )) ?? false;
+      if (!granted)
+        return {
+          ...local,
+          mode: 'only_in_cloud',
+          retryLater: false,
+          error: {
+            kind: 'cloud_consent_denied',
+            code: 'consent',
+            message: 'Cloud transcription was not approved. No audio was uploaded.',
+          },
+        };
+    }
+    return this.log(await this.transcribeInCloud(clips));
+  }
+
+  private async transcribeOnDevice(clips: AudioInput[]): Promise<AIResult<Transcript>> {
+    const started = this.now();
+    const base = {
+      task: 'transcribe' as const,
+      mode: 'only_on_device' as const,
+      timestamp: new Date(started).toISOString(),
+    };
+    if (!this.factory.onDeviceAudio || !this.factory.onDeviceApiPresent())
+      return {
+        ...base,
+        ok: false,
+        durationMs: 0,
+        retryLater: false,
+        error: {
+          kind: 'local_unavailable',
+          code: 'prompt-api-missing',
+          message: 'On-device speech transcription is not available in this browser.',
+        },
+      };
+    try {
+      const text = await this.factory.onDeviceAudio(TRANSCRIBE_INSTRUCTION, clips);
+      return {
+        ...base,
+        ok: true,
+        output: { transcript: text.slice(0, 6000) },
+        // This path calls Chrome's built-in model directly; nothing leaves the browser.
+        source: 'on_device',
+        model: ON_DEVICE_MODEL_LABEL,
+        durationMs: this.now() - started,
+      };
+    } catch (err) {
+      return {
+        ...base,
+        ok: false,
+        durationMs: this.now() - started,
+        retryLater: false,
+        error: classifyError(err, 'only_on_device'),
+      };
+    }
+  }
+
+  private async transcribeInCloud(clips: AudioInput[]): Promise<AIResult<Transcript>> {
+    const started = this.now();
+    const base = {
+      task: 'transcribe' as const,
+      mode: 'only_in_cloud' as const,
+      timestamp: new Date(started).toISOString(),
+    };
+    if (!this.takeCloudToken())
+      return {
+        ...base,
+        ok: false,
+        durationMs: 0,
+        retryLater: true,
+        error: {
+          kind: 'rate_limited',
+          code: 'client-rate-limit',
+          message: 'Local rate limit reached; will retry shortly.',
+        },
+      };
+    try {
+      const result = await this.factory
+        .model('transcribe', 'only_in_cloud')
+        .generateContent([
+          { text: TRANSCRIBE_INSTRUCTION },
+          ...clips.map((c) => ({ inlineData: { mimeType: c.mimeType, data: c.data } })),
+        ]);
+      const parsed = VALIDATORS.transcribe.safeParse(parseModelJson(result.response.text()));
+      if (!parsed.success)
+        throw Object.assign(new Error('Malformed transcribe output'), { code: 'parse-failed' });
+      const source = mapSource(result.response.inferenceSource);
+      return {
+        ...base,
+        ok: true,
+        output: parsed.data as Transcript,
+        source,
+        model: source === 'in_cloud' ? this.factory.cloudModelName : 'unknown',
+        durationMs: this.now() - started,
+      };
+    } catch (err) {
+      const error = classifyError(err, 'only_in_cloud');
+      return {
+        ...base,
+        ok: false,
+        durationMs: this.now() - started,
+        error,
+        retryLater: ['offline', 'rate_limited', 'network'].includes(error.kind),
+      };
+    }
   }
 
   /** Force a specific mode (used by the hybrid demo panel to show both paths side by side). */

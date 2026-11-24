@@ -35,7 +35,8 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
     await popup.evaluate(async () => {
       await chrome.runtime.sendMessage({
         type: 'updateSettings',
-        patch: { trackingEnabled: true },
+        // Demo timing makes the speech sampler take its first 6 s clip after 2 s of playback.
+        patch: { trackingEnabled: true, speechDetection: true, demoMode: true },
       });
       const r = await chrome.runtime.sendMessage({
         type: 'addOrigin',
@@ -54,7 +55,7 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
       a.muted = true;
       await a.play();
     });
-    await page.waitForTimeout(8_000);
+    await page.waitForTimeout(13_000);
     await page.evaluate(() => document.querySelector('audio')!.pause());
     await page.waitForTimeout(500);
     await page.close({ runBeforeUnload: true }); // pagehide -> closeSession
@@ -86,6 +87,7 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
           {
             meta: { contentType: string; origin: string; url: string };
             events: { kind: string; type: string }[];
+            speech: { mimeType: string; durationSec: number; data: string }[];
           }[]
         >((res) =>
           (globalThis as unknown as { chrome: typeof chrome }).chrome.runtime.sendMessage(
@@ -106,6 +108,13 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
     const audio = pulled.find((s) => s.meta.contentType === 'audio')!;
     expect(audio.events.some((e) => e.kind === 'media' && e.type === 'play')).toBe(true);
     expect(audio.events.some((e) => e.kind === 'media' && e.type === 'pause')).toBe(true);
+    // Speech detection recorded audio from the <audio> element itself (not the microphone).
+    expect(audio.speech.length).toBeGreaterThanOrEqual(1);
+    expect(audio.speech[0]!.mimeType).toBe('audio/webm');
+    expect(audio.speech[0]!.durationSec).toBeGreaterThanOrEqual(3);
+    expect(audio.speech[0]!.data.length).toBeGreaterThan(1000);
+    // Reading sessions never carry audio.
+    expect(pulled.find((s) => s.meta.contentType === 'reading')!.speech).toHaveLength(0);
   } finally {
     await ctx.close();
     // Restore the normal build (without the test-only host permission).

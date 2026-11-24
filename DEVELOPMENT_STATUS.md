@@ -51,6 +51,14 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
   - `SKILLTRACE_VERSION` stamps the version, and `pnpm package:extension` writes a deterministic zip with a dependency-free writer.
   - `.github/workflows/release.yml`: a `v*.*.*` tag runs CI, builds for the hosted origins, and publishes the zip on a GitHub Release.
   - Verified locally: a 0.2.0 build zipped 12 files, Windows unzip works, and `externally_connectable` lists web.app, firebaseapp.com and localhost.
+- **Extension: YouTube sessions and speech-based skill detection (2026-11-24).**
+  - **Per-video sessions:** each YouTube video gets its own session. A new source ends the old session, the title and description are read again, ads are skipped, and the page ID includes `v`. Previously, every YouTube video shared the page ID `/watch` and the first session absorbed later videos.
+  - **Speech detection (opt-in):** up to three 20-second clips from the media element are transcribed on-device first (Prompt API audio, since the firebase/ai on-device adapter accepts only images), with the cloud through Firebase AI Logic used only under the consent policy. Audio is never stored.
+  - **Verified:**
+    - the extension E2E records a real WebM/Opus clip and pulls it into the dashboard
+    - the live cloud transcription of a lesson clip was accurate (`in_cloud`, 2.3 s)
+    - classification of "Lecture 7" moved from "not learning" to SQL (0.95) with the transcript
+  - **Not yet verified:** on-device audio transcription, which needs Gemini Nano with multimodal input in the owner's Chrome.
 
 ## Open blockers (owner action needed)
 

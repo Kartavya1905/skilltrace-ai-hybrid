@@ -47,6 +47,9 @@ export const RepoSkillsZ = z.object({
 });
 export type RepoSkills = z.infer<typeof RepoSkillsZ>;
 
+export const TranscriptZ = z.object({ transcript: z.string().max(6000) });
+export type Transcript = z.infer<typeof TranscriptZ>;
+
 const str = { type: 'string' } as const;
 const strArr = (maxItems: number) => ({ type: 'array', items: str, maxItems }) as const;
 
@@ -111,6 +114,11 @@ export const JSON_SCHEMAS = {
     },
     required: ['skills'],
   },
+  transcribe: {
+    type: 'object',
+    properties: { transcript: str },
+    required: ['transcript'],
+  },
 } as const;
 
 export type TaskName = keyof typeof JSON_SCHEMAS;
@@ -123,6 +131,7 @@ export const VALIDATORS: Record<TaskName, z.ZodType> = {
   explain: ExplanationZ,
   passport: PassportSummaryZ,
   repoSkills: RepoSkillsZ,
+  transcribe: TranscriptZ,
 };
 
 /** Extract JSON from model text (tolerates ```json fences some models add). */
