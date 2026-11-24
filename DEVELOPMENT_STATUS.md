@@ -1,10 +1,14 @@
 # Development status
 
-_Last updated: 2026-11-23. Deadline: 2026-11-30 17:00 ET._
+_Last updated: 2026-11-24. Deadline: 2026-11-30 17:00 ET._
 
 ## Current phase
 
-Phase 8 (integration, security, docs) is complete in code. What remains needs owner credentials: Firebase project, deployment, live AI verification, public repository and demo video.
+**M6 (submission).** The live app, the CI-gated deploys, the v0.2.0 extension release and the submission text are all done. Left for the owner:
+
+- the sign-in checks for M5
+- recording and uploading the demo video
+- submitting on Devpost
 
 ## Completed modules
 
@@ -72,6 +76,13 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
   - **Owner checks pending** (the browser pane blocks the Google sign-in popup):
     - sign in on the live site and run the Hybrid AI modes
     - install the v0.2.0 extension, then test YouTube per-video sessions and speech detection, including on-device transcription
+- **M6 (submission): text ready 2026-11-24.** `docs/hackathon-submission.md` is rewritten:
+  - Devpost text with only verified facts and live links
+  - the new speech and YouTube features, with honest limitations
+  - a 3-minute demo script on the live site that uses only SkillTrace's own media, with every UI label it mentions checked against the code
+  - a submission checklist
+
+  The README links the live app and the release. Pipeline run `e6b71ca` passed, including the browser smoke test in CI.
 
 ## Open blockers (owner action needed)
 
