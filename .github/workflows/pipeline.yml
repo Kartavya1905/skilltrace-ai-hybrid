@@ -1,0 +1,120 @@
+# M3 - Delivery pipeline: CI gate, then deploy.
+#   push to main  -> CI -> live deploy (Hosting + Firestore rules and indexes)
+#   pull request  -> CI -> Hosting preview channel (7 days), link posted on the PR
+# Setup (once): docs/deployment.md, section "Continuous deployment".
+#   variable FIREBASE_WEB_ENV: the public VITE_* web config (multi-line, not a secret)
+#   secret   FIREBASE_SERVICE_ACCOUNT: JSON key of the deploy service account
+name: Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  deploy-live:
+    name: Deploy to Firebase (live)
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    concurrency:
+      group: deploy-live
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Write web config and check it
+        id: config
+        env:
+          FIREBASE_WEB_ENV: ${{ vars.FIREBASE_WEB_ENV }}
+          HAS_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        run: |
+          if [ -z "$FIREBASE_WEB_ENV" ] || [ "$HAS_KEY" != "true" ]; then
+            echo "::error::Set variable FIREBASE_WEB_ENV and secret FIREBASE_SERVICE_ACCOUNT (docs/deployment.md)."
+            exit 1
+          fi
+          printf '%s\n' "$FIREBASE_WEB_ENV" > apps/web/.env.local
+          project=$(grep -E '^VITE_FIREBASE_PROJECT_ID=' apps/web/.env.local | cut -d= -f2 | tr -d '\r')
+          echo "{\"projects\":{\"default\":\"$project\"}}" > .firebaserc
+          echo "project=$project" >> "$GITHUB_OUTPUT"
+          node scripts/check-env.mjs --production
+      - run: pnpm build:web
+      - name: Authenticate deploy service account
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Deploy Hosting, Firestore rules and indexes
+        id: deploy
+        run: |
+          pnpm exec firebase deploy --only hosting,firestore:rules,firestore:indexes \
+            --project "${{ steps.config.outputs.project }}" --non-interactive \
+            --message "GitHub Actions ${GITHUB_SHA::7}"
+          echo "url=https://${{ steps.config.outputs.project }}.web.app" >> "$GITHUB_OUTPUT"
+      - name: Smoke test the live site
+        run: |
+          url="https://${{ steps.config.outputs.project }}.web.app"
+          for path in / /signin /app/lab/video /lab/media/python-functions.vtt; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$url$path")
+            echo "$path -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
+          curl -sI "$url/" | grep -qi '^x-frame-options: DENY' || { echo "security headers missing"; exit 1; }
+
+  deploy-preview:
+    name: Deploy preview channel
+    needs: ci
+    # Same-repository PRs only: forks never receive the deploy secret.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Write web config
+        id: config
+        env:
+          FIREBASE_WEB_ENV: ${{ vars.FIREBASE_WEB_ENV }}
+        run: |
+          if [ -z "$FIREBASE_WEB_ENV" ]; then echo "::error::Variable FIREBASE_WEB_ENV is not set."; exit 1; fi
+          printf '%s\n' "$FIREBASE_WEB_ENV" > apps/web/.env.local
+          project=$(grep -E '^VITE_FIREBASE_PROJECT_ID=' apps/web/.env.local | cut -d= -f2 | tr -d '\r')
+          echo "project=$project" >> "$GITHUB_OUTPUT"
+          node scripts/check-env.mjs --production
+      - run: pnpm build:web
+      - name: Deploy to a 7-day preview channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ steps.config.outputs.project }}
+          expires: 7d

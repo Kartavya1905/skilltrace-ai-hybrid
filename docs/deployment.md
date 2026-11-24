@@ -60,6 +60,30 @@ npx firebase deploy --only firestore:rules,firestore:indexes,hosting
 
 After you've confirmed that real traffic carries App Check tokens, turn on App Check **enforcement** for Cloud Firestore in the console.
 
+## 3b. Continuous deployment (GitHub Actions)
+
+`.github/workflows/pipeline.yml` runs CI on every push and pull request:
+
+- **Push to `main`:** after CI passes, it deploys Hosting plus Firestore rules and indexes, then smoke-tests the live URL.
+- **Same-repository pull request:** after CI passes, it deploys a 7-day Hosting preview channel and posts the link on the PR.
+
+One-time setup in GitHub (repository **Settings → Secrets and variables → Actions**):
+
+1. **Variable `FIREBASE_WEB_ENV`** (Variables tab). Paste the public web config as multi-line text: the `VITE_FIREBASE_*` lines plus `VITE_APPCHECK_PROVIDER` and `VITE_RECAPTCHA_SITE_KEY` from `apps/web/.env.local`. These values ship in the public JavaScript anyway, so a variable is fine; don't include `VITE_APPCHECK_DEBUG*` or `VITE_USE_EMULATORS`.
+2. **Secret `FIREBASE_SERVICE_ACCOUNT`** (Secrets tab). This is the JSON key of a deploy-only service account:
+   1. Google Cloud console → **IAM & Admin → Service accounts → Create service account**, named `github-deploy`.
+   2. Grant these roles:
+      - **Firebase Hosting Admin**
+      - **Firebase Rules Admin**
+      - **Cloud Datastore Index Admin**
+      - **Service Usage Consumer**
+      - **API Keys Viewer**
+   3. Open the account → **Keys → Add key → JSON**. Paste the downloaded file's contents into the secret, then delete the file.
+
+Without these settings, the deploy job fails with a message that names what's missing. CI itself needs neither.
+
+Preview channels run on hosts like `<project>--pr12-….web.app`. Those hosts aren't in the reCAPTCHA key's domains or Auth's authorized domains, so previews show the UI, but App Check, Google sign-in and AI calls fail there. Check those on the live site.
+
 ## 4. Chrome extension for the hosted dashboard
 
 ```bash
