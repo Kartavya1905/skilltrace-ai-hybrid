@@ -8,9 +8,11 @@ Everything below works on Firebase's no-cost **Spark** plan. Nothing in this set
 2. **Authentication** → Sign-in method: enable **Google** and **Email/Password**.
 3. **Firestore** → Create database (production mode).
 4. **AI Logic** → Get started → choose the **Gemini Developer API** provider.
-5. **App Check** → register the web app with **reCAPTCHA v3**: create a v3 site key at https://www.google.com/recaptcha/admin, adding your hosting domain only. App Check is enforced for Firebase AI Logic.
-   - For local development, set `VITE_APPCHECK_DEBUG=true`, open the app, copy the debug token from the browser console, and add it under App Check → Apps → Manage debug tokens.
-   - Optional: `VITE_APPCHECK_PROVIDER=recaptcha-enterprise` uses `ReCaptchaEnterpriseProvider` instead.
+5. **App Check** uses **Fraud Defense** (formerly reCAPTCHA Enterprise). Google no longer issues Classic reCAPTCHA keys. The free tier covers 10,000 assessments a month. Without a billing account, requests beyond that fail instead of costing money.
+   - In Google Cloud, enable the **reCAPTCHA Enterprise API** for this project.
+   - Under **Security → Fraud Defense → Create key**, choose type **Web** with the domains `localhost` and `<project>.web.app`. Create the key **in the same project**; a key from another project fails with "CreateAssessment".
+   - In **App Check → Apps → your web app → Fraud Defense**, paste the **site key** and save. No secret key is needed. New registrations take a few minutes to start working.
+   - In `apps/web/.env.local`, set `VITE_APPCHECK_PROVIDER=recaptcha-enterprise` and `VITE_RECAPTCHA_SITE_KEY=<site key>`.
 
 ## 2. Configure the web app
 
@@ -24,8 +26,7 @@ pnpm setup:firebase --project <your-project-id>   # writes apps/web/.env.local a
 
 Then add the App Check values to `apps/web/.env.local` by hand:
 
-- `VITE_RECAPTCHA_SITE_KEY`: the reCAPTCHA v3 **site** key from step 1.5. Never use the secret key.
-- `VITE_APPCHECK_DEBUG=true` for local development, until the debug token is registered.
+- `VITE_APPCHECK_PROVIDER=recaptcha-enterprise` and `VITE_RECAPTCHA_SITE_KEY=<Fraud Defense site key>` from step 1.5. Because `localhost` is in the key's domains, local development needs no debug token.
 
 ```bash
 pnpm check:env                # validates the config without printing any values

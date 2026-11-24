@@ -31,25 +31,17 @@ Phase 8 (integration, security, docs) is complete in code. What remains needs ow
 Milestones M1–M6 are in docs/pipeline-milestones.md.
 
 - **M1 (CI quality gate): done.** `.github/workflows/ci.yml` passed all three jobs (quality, Firestore rules, E2E) on GitHub, run 45315453716, 2026-11-23.
-- **M2 (Firebase project and config): in progress.** This version has its own project, `skilltrace-hybrid-2026` ("SkillTrace AI Hybrid", Spark plan), created 2026-11-24. It is fully separate from the Codex version and its project. Done so far:
-  - web app "SkillTrace AI Web" created; config written with `pnpm setup:firebase`
-  - Firestore `(default)` database in nam5, with this repo's rules and indexes deployed
-
-  Owner console steps still open:
-  - Authentication: Get started, then enable Google and Email/Password
-  - AI Logic: Get started with the Gemini Developer API
-  - App Check: register a new reCAPTCHA v3 site key and a debug token for local development
-
-  Then: sign in, finish a Lab session, and confirm it was saved and classified.
+- **M2 (Firebase project and config): nearly done.** `skilltrace-hybrid-2026` ("SkillTrace AI Hybrid", Spark plan) is this version's own project, separate from the Codex version.
+  - Web app: **SkillTrace Hybrid Web** (`…af84170287ba`). The first app, SkillTrace AI Web, is unused and can be deleted.
+  - Firestore `(default)` in nam5, with this repo's rules and indexes.
+  - Auth: Google and Email/Password enabled. AI Logic: Gemini Developer API.
+  - App Check: Fraud Defense key "SkillTrace Hybrid Web", created in this project with the reCAPTCHA Enterprise API enabled.
+  - Verified 2026-11-24 on localhost: an App Check token was issued, and a cloud `generateContent` call succeeded with `inferenceSource: in_cloud`.
+  - Remaining: sign in, finish a Learning Lab session, and confirm it is saved to Firestore and classified.
 
 ## Open blockers (owner action needed)
 
-1. **Firebase console steps for `skilltrace-hybrid-2026`.** The project, web app and Firestore already exist. Still needed:
-   - enable Auth (Google and Email)
-   - enable AI Logic (Gemini Developer API)
-   - set up App Check (reCAPTCHA v3), then add the site key and debug token to `apps/web/.env.local`
-
-   See docs/deployment.md.
+1. **M2 end-to-end check.** Sign in at http://localhost:5310, finish a Lab session, and confirm it is saved and classified.
 
 2. **Live hybrid verification.** On Chrome 139+ with the Prompt API flag, open Hybrid AI and run all three modes; confirm the on-device badge appears.
 3. **Deploy.** `pnpm build:web && npx firebase deploy --only firestore:rules,firestore:indexes,hosting`, then rebuild the extension with the hosted origin.
