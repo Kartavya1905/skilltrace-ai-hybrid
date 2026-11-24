@@ -107,5 +107,17 @@ export function validateEnv(env, { target = 'development', firebaserc } = {}) {
     warnings.push(
       'VITE_RECAPTCHA_SITE_KEY does not look like a reCAPTCHA site key (40 characters)',
     );
+  const debugToken = get('VITE_APPCHECK_DEBUG_TOKEN');
+  if (
+    debugToken &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(debugToken)
+  )
+    errors.push(
+      'VITE_APPCHECK_DEBUG_TOKEN should be the UUID from App Check > Manage debug tokens',
+    );
+  if (target === 'development' && debug && !debugToken)
+    warnings.push(
+      'App Check debug mode without VITE_APPCHECK_DEBUG_TOKEN: register the token the browser console prints',
+    );
   return { errors, warnings };
 }

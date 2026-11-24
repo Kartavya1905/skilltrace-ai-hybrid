@@ -53,10 +53,12 @@ export function getFirebase(): FirebaseServices | null {
   let appCheck: AppCheck | null = null;
   let appCheckStatus = 'not configured (set VITE_RECAPTCHA_SITE_KEY)';
   if (env.DEV && env.VITE_APPCHECK_DEBUG === 'true') {
-    // Local development: the SDK prints a debug token to the console; register it in the
-    // Firebase console under App Check > Apps > Manage debug tokens.
-    (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN =
-      true;
+    // Local development only (never in a production build). Either use the token you generated
+    // in the Firebase console (App Check > Apps > Manage debug tokens), set as
+    // VITE_APPCHECK_DEBUG_TOKEN, or let the SDK print a new one to the console for you to register.
+    (
+      self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN: boolean | string }
+    ).FIREBASE_APPCHECK_DEBUG_TOKEN = env.VITE_APPCHECK_DEBUG_TOKEN || true;
   }
   if (env.VITE_RECAPTCHA_SITE_KEY || (env.DEV && env.VITE_APPCHECK_DEBUG === 'true')) {
     const key = env.VITE_RECAPTCHA_SITE_KEY ?? 'debug-only';

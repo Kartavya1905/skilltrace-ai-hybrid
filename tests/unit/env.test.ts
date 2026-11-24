@@ -63,7 +63,23 @@ describe('env helpers', () => {
     expect(errors).toEqual([]);
     expect(warnings.join()).toMatch(/App Check/);
     expect(
-      validateEnv({ ...good, VITE_RECAPTCHA_SITE_KEY: '', VITE_APPCHECK_DEBUG: 'true' }).warnings,
+      validateEnv({
+        ...good,
+        VITE_RECAPTCHA_SITE_KEY: '',
+        VITE_APPCHECK_DEBUG: 'true',
+        VITE_APPCHECK_DEBUG_TOKEN: '0f8fad5b-d9cb-469f-a165-70867728950e',
+      }).warnings,
     ).toEqual([]);
+  });
+});
+
+describe('App Check debug token', () => {
+  it('accepts a console-generated UUID and rejects anything else', () => {
+    const dev = { ...good, VITE_APPCHECK_DEBUG: 'true' };
+    expect(
+      validateEnv({ ...dev, VITE_APPCHECK_DEBUG_TOKEN: '0f8fad5b-d9cb-469f-a165-70867728950e' }),
+    ).toEqual({ errors: [], warnings: [] });
+    expect(validateEnv({ ...dev, VITE_APPCHECK_DEBUG_TOKEN: 'abc' }).errors).toHaveLength(1);
+    expect(validateEnv(dev).warnings.join()).toMatch(/debug token|DEBUG_TOKEN/);
   });
 });

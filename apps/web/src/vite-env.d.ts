@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_APPCHECK_PROVIDER?: 'recaptcha-v3' | 'recaptcha-enterprise';
   readonly VITE_RECAPTCHA_SITE_KEY?: string;
   readonly VITE_APPCHECK_DEBUG?: string;
+  readonly VITE_APPCHECK_DEBUG_TOKEN?: string;
   readonly VITE_AI_CLOUD_MODEL?: string;
   readonly VITE_USE_EMULATORS?: string;
   readonly VITE_EXTENSION_ID?: string;
