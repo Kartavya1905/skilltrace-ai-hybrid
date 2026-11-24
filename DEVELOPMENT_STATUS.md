@@ -31,10 +31,16 @@ Phase 8 (integration, security, docs) is complete in code. What remains needs ow
 Milestones M1–M6 are in docs/pipeline-milestones.md.
 
 - **M1 (CI quality gate): done.** `.github/workflows/ci.yml` passed all three jobs (quality, Firestore rules, E2E) on GitHub, run 45315453716, 2026-11-23.
-- **M2 (Firebase project and config): in progress.** The owner chose to reuse `skilltrace-ai-hackathon-2026`, which replaces the Codex version. Done so far:
-  - local config written and validated with `pnpm check:env`
-  - App Check set to reCAPTCHA Enterprise; local development uses a debug token
-  - Firestore rules deployed on 2026-11-24
+- **M2 (Firebase project and config): in progress.** This version has its own project, `skilltrace-hybrid-2026` ("SkillTrace AI Hybrid", Spark plan), created 2026-11-24. It is fully separate from the Codex version and its project. Done so far:
+  - web app "SkillTrace AI Web" created; config written with `pnpm setup:firebase`
+  - Firestore `(default)` database in nam5, with this repo's rules and indexes deployed
+
+  Owner console steps still open:
+  - Authentication: Get started, then enable Google and Email/Password
+  - AI Logic: Get started with the Gemini Developer API
+  - App Check: register a new reCAPTCHA v3 site key and a debug token for local development
+
+  Then: sign in, finish a Lab session, and confirm it was saved and classified.
 
   Owner console steps still open:
   - enable Google and Email/Password sign-in
