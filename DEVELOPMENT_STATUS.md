@@ -40,17 +40,15 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
   - Verified end to end with the owner signed in. Two Learning Lab video sessions were saved under `users/<uid>/learning_sessions`, with their events, sources, skills and inference logs. One had 64.1 s eligible time.
   - Both sessions are classified as Python by the **on-device** model: `classifiedBy.source: "on_device"`, mode `only_on_device`, model "Chrome built-in model via Prompt API", in 8.7 s and 25.5 s. This confirms that live hybrid on-device inference works.
   - The earlier cloud path was verified as well: `inferenceSource: in_cloud`.
-- **M3 (continuous deployment): in progress.** First manual deploy on 2026-11-24 went to https://skilltrace-hybrid-2026.web.app. The live site checks passed:
-  - security headers present
-  - SPA deep links return 200
-  - lesson media cached
-  - reCAPTCHA Enterprise token exchanged for an App Check token (HTTP 200)
+- **M3 (continuous deployment): done 2026-11-24.** Pipeline run 45364961480 on `edbb00a` passed:
+  - CI: quality, Firestore rules and E2E
+  - live deploy of Hosting plus Firestore rules and indexes, then a smoke test
 
-  `.github/workflows/pipeline.yml` runs CI, then the live deploy and smoke test, and a preview channel for pull requests. Waiting on the owner to add the `FIREBASE_WEB_ENV` variable and the `FIREBASE_SERVICE_ACCOUNT` secret (docs/deployment.md 3b).
+  The live release on https://skilltrace-hybrid-2026.web.app is labelled "GitHub Actions edbb00a" and was released by the `github-deploy` service account. App Check on the live domain was verified earlier (an Enterprise token was exchanged with HTTP 200). From now on, every push to `main` deploys automatically after CI passes, and same-repository PRs get a 7-day preview.
 
 ## Open blockers (owner action needed)
 
-1. **M3 continuous deployment.** Add the GitHub variable and secret (docs/deployment.md 3b), then push and confirm that the pipeline deploys.
+1. **M4 extension release.** Build the extension with the hosted origin and publish the zip on a GitHub Release.
 
 2. **Live hybrid verification.** On-device and cloud are both confirmed on localhost (2026-11-24). Re-check on the deployed site in M5.
 3. **Deploy.** `pnpm build:web && npx firebase deploy --only firestore:rules,firestore:indexes,hosting`, then rebuild the extension with the hosted origin.
