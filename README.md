@@ -59,17 +59,17 @@ To connect Firebase AI Logic, App Check, Auth and Firestore, see [docs/deploymen
 
 ### Chrome extension
 
-```bash
-pnpm build:extension     # apps/extension/dist
-```
+**Full user guide: [apps/extension/README.md](apps/extension/README.md)**, covering install, approving sites, studying, syncing and reading your skill times.
 
-Open `chrome://extensions`, turn on Developer mode, choose **Load unpacked**, and select `apps/extension/dist`. Then, in the popup:
+In short:
 
-1. Enable tracking.
-2. Open a learning page and click **Allow tracking on this site**.
-3. Use **Open dashboard** to connect the extension.
+1. Download `skilltrace-extension-v0.2.1.zip` from the [release](https://github.com/Kartavya1905/skilltrace-ai-hybrid/releases/tag/v0.2.1) and unzip it. In `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the folder.
+2. In the popup, turn on **Learning activity tracking** (and optionally **Detect skills from speech**).
+3. On a site you learn from, such as YouTube, click **Allow tracking on this site**.
+4. Watch or read as usual, then close the tab when you finish.
+5. **At the end, sync:** open the dashboard from the popup, go to **Privacy & Settings → Websites (Chrome extension)** and click **Sync sessions**. Only then are your sessions imported and your skills detected, and **Skills** shows the time and dates for each skill.
 
-For a quick demo, approve `localhost` and open `http://localhost:5310/lab/extension-demo.html`. For a hosted dashboard, build with `SKILLTRACE_DASHBOARD_ORIGINS=https://your-project.web.app,http://localhost:5310`.
+To build it from source: `pnpm build:extension`, then load `apps/extension/dist`. For a local demo, approve `localhost` and open `http://localhost:5310/lab/extension-demo.html`. For a hosted dashboard, build with `SKILLTRACE_DASHBOARD_ORIGINS=https://your-project.web.app,http://localhost:5310`.
 
 ## Scripts
 
@@ -86,6 +86,7 @@ For a quick demo, approve `localhost` and open `http://localhost:5310/lab/extens
 
 - [Architecture](docs/architecture.md)
 - [Data model](docs/data-model.md)
+- [Chrome extension user guide](apps/extension/README.md)
 - [Privacy](docs/privacy.md)
 - [Test plan and results](docs/test-plan.md)
 - [Deployment](docs/deployment.md)
