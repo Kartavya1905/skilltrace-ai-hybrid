@@ -56,6 +56,18 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
       await a.play();
     });
     await page.waitForTimeout(13_000);
+    // The source is removed and loaded again (what YouTube does around an ad break): the same
+    // recording must continue in the same session instead of starting a second one.
+    await page.evaluate(async () => {
+      const a = document.querySelector('audio')!;
+      const src = a.src;
+      a.removeAttribute('src');
+      a.load(); // fires 'emptied'
+      await new Promise((r) => setTimeout(r, 1_500));
+      a.src = src;
+      await a.play();
+    });
+    await page.waitForTimeout(3_000);
     await page.evaluate(() => document.querySelector('audio')!.pause());
     await page.waitForTimeout(500);
     await page.close({ runBeforeUnload: true }); // pagehide -> closeSession
@@ -85,7 +97,7 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
       (id) =>
         new Promise<
           {
-            meta: { contentType: string; origin: string; url: string };
+            meta: { contentType: string; origin: string; url: string; title: string };
             events: { kind: string; type: string }[];
             speech: { mimeType: string; durationSec: number; data: string }[];
           }[]
@@ -105,8 +117,14 @@ test('extension tracks an approved page and hands sessions to the dashboard', as
       expect(s.meta.origin).toBe('http://localhost:5310');
       expect(s.meta.url).not.toContain('?'); // query strings are never stored
     }
-    const audio = pulled.find((s) => s.meta.contentType === 'audio')!;
-    expect(audio.events.some((e) => e.kind === 'media' && e.type === 'play')).toBe(true);
+    const audioSessions = pulled.filter((s) => s.meta.contentType === 'audio');
+    expect(audioSessions).toHaveLength(1); // one recording, one session, across the reload
+    const audio = audioSessions[0]!;
+    expect(audio.meta.title).toBe('Python Lists and Dictionaries - SkillTrace extension demo page');
+    const media = audio.events.filter((e) => e.kind === 'media').map((e) => e.type);
+    // Credit stopped while the source was gone and picked up again afterwards.
+    expect(media.indexOf('interrupt')).toBeGreaterThan(-1);
+    expect(media.lastIndexOf('play')).toBeGreaterThan(media.indexOf('interrupt'));
     expect(audio.events.some((e) => e.kind === 'media' && e.type === 'pause')).toBe(true);
     // Speech detection recorded audio from the <audio> element itself (not the microphone).
     expect(audio.speech.length).toBeGreaterThanOrEqual(1);

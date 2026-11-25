@@ -21,6 +21,7 @@ import {
 } from '@skilltrace/tracking-engine';
 import { bindMediaElement, bindReading } from '@skilltrace/tracking-engine/dom';
 import type { ExtensionSettings, InternalMessage } from './protocol';
+import { MediaSessionSwitch, cleanTitle, mediaAllowedOn, type SessionHandle } from './page';
 import { DEMO_SPEECH_PLAN, SPEECH_PLAN, recordSpeech } from './speech';
 
 const send = <T>(msg: InternalMessage) => chrome.runtime.sendMessage(msg) as Promise<T>;
@@ -186,7 +187,7 @@ async function main() {
     pageId: pageIdFromUrl(location.href),
     origin: location.origin,
     url: sanitizeUrl(location.href),
-    title: document.title.slice(0, 300),
+    title: cleanTitle(document.title, location.hostname),
     contentType,
     wordCount: 0,
     durationSec: 0,
@@ -197,16 +198,21 @@ async function main() {
     ...extra,
   });
 
-  /** Starts a tracked session and returns a stop function that ends it (safe to call twice). */
+  /**
+   * Starts a tracked session. The handle ends it (safe to call twice), or suspends and resumes the
+   * page binding: while suspended nothing is credited, but the session stays open.
+   */
   function run(
     meta: SessionMeta,
     attach: (s: TrackedSession) => () => void,
     media?: HTMLMediaElement,
-  ): () => void {
+  ): SessionHandle {
     let hide: (() => void) | null = null;
     let detach: (() => void) | null = null;
     let tick: ReturnType<typeof setInterval> | null = null;
     let stopped = false;
+    let ready = false;
+    let suspended = false;
     const session = new TrackedSession(meta, opts, {
       persist: (e) => queue.push(e),
       onCheck: (c) => (hide = showCheck(c, () => session.respond(c.checkId))),
@@ -216,12 +222,16 @@ async function main() {
         if (outcome === 'missed') media?.pause(); // stop crediting until the learner resumes
       },
     });
+    const unbind = () => {
+      detach?.();
+      detach = null;
+    };
     const stop = () => {
       if (stopped) return;
       stopped = true;
       active.delete(stop);
       if (tick) clearInterval(tick);
-      detach?.();
+      unbind();
       hide?.();
       queue.flush();
       void send({ type: 'closeSession', sessionId: meta.sessionId });
@@ -229,10 +239,22 @@ async function main() {
     active.add(stop);
     void send({ type: 'meta', meta }).then(() => {
       if (stopped) return;
-      detach = attach(session);
+      ready = true;
+      if (!suspended) detach = attach(session);
       tick = setInterval(() => session.tick(), 1_000);
     });
-    return stop;
+    return {
+      stop,
+      suspend() {
+        suspended = true;
+        unbind();
+        queue.flush();
+      },
+      resume() {
+        suspended = false;
+        if (ready && !stopped && !detach) detach = attach(session);
+      },
+    };
   }
 
   const excerpt = (mainContainer().innerText ?? '').replace(/\s+/g, ' ').slice(0, 1500);
@@ -242,25 +264,30 @@ async function main() {
 
   /**
    * One session per piece of content. Sites like YouTube swap videos inside the same <video>
-   * element without a page load, so a new source (new page ID or duration) ends the current
-   * session and starts a new one with the new title and description.
+   * element without a page load, so a new source (new page ID or duration) starts a new session
+   * with the new title and description. Ad breaks and source reloads only park the session: it
+   * continues when the same video comes back, so one video stays one session (see page.ts).
    */
   function trackMedia(el: HTMLMediaElement) {
     if (bound.has(el)) return;
     bound.add(el);
-    let current: { key: string; stop: () => void } | null = null;
-    let pending: ReturnType<typeof setTimeout> | null = null;
-    const keyNow = () => `${pageIdFromUrl(location.href)}|${Math.round(el.duration)}`;
+    const kind = el instanceof HTMLVideoElement ? 'video' : 'audio';
+    const keyOf = () => `${pageIdFromUrl(location.href)}|${Math.round(el.duration)}`;
+    const trackable = () =>
+      !adPlaying() &&
+      mediaAllowedOn(location.href) &&
+      Number.isFinite(el.duration) &&
+      el.duration >= MIN_MEDIA_SECONDS;
 
-    const end = () => {
-      if (pending) clearTimeout(pending);
-      pending = null;
-      current?.stop();
-      current = null;
-    };
+    // Last position of the tracked content, so a parked session closes its span where the video
+    // really was (a new source resets currentTime to 0 before we hear about it).
+    let last = { pos: 0, rate: 1, duration: 0 };
+    el.addEventListener('timeupdate', () => {
+      if (sessions.activeKey !== null && !el.seeking && trackable())
+        last = { pos: el.currentTime, rate: el.playbackRate || 1, duration: el.duration };
+    });
 
-    const start = (key: string) => {
-      const kind = el instanceof HTMLVideoElement ? 'video' : 'audio';
+    const start = (): SessionHandle => {
       const description = pageDescription();
       const captions = Array.from(el.querySelectorAll('track'))
         .map((t) => t.label)
@@ -271,10 +298,10 @@ async function main() {
         // The description is about this video; the rest of the page may be unrelated sidebars.
         excerpt: (description || `${captions}\n${excerpt}`).trim().slice(0, 1500),
       });
-      const stop = run(
+      return run(
         meta,
         (s) => {
-          // Media may already be playing when we attach.
+          // Media may already be playing when we attach (also when resuming after an ad).
           if (!el.paused)
             s.media('play', { pos: el.currentTime, rate: el.playbackRate, duration: el.duration });
           const unbind = bindMediaElement(el, s);
@@ -286,29 +313,25 @@ async function main() {
           return () => {
             stopSpeech();
             unbind();
+            s.media('interrupt', last); // end the open span without counting a pause
           };
         },
         el,
       );
-      current = { key, stop };
     };
 
+    const sessions = new MediaSessionSwitch(start, () => (trackable() ? keyOf() : null));
+
     const sync = () => {
-      if (adPlaying()) return end(); // ads are never credited or classified
-      if (!Number.isFinite(el.duration) || el.duration < MIN_MEDIA_SECONDS) return;
-      const key = keyNow();
-      if (current?.key === key || pending) return;
-      end();
-      // Wait a moment: single-page sites update the title and description after the switch.
-      pending = setTimeout(() => {
-        pending = null;
-        if (!adPlaying() && keyNow() === key && !current) start(key);
-      }, 1_200);
+      if (adPlaying() || !mediaAllowedOn(location.href)) return sessions.interrupt();
+      if (!Number.isFinite(el.duration)) return; // metadata not loaded yet
+      if (el.duration < MIN_MEDIA_SECONDS) return sessions.interrupt(); // a short clip, e.g. an ad
+      sessions.observe(keyOf());
     };
 
     for (const ev of ['loadedmetadata', 'durationchange', 'play', 'playing'])
       el.addEventListener(ev, sync);
-    el.addEventListener('emptied', end); // source removed, e.g. moving to another video
+    el.addEventListener('emptied', () => sessions.interrupt()); // source removed or replaced
     sync();
   }
 

@@ -6,7 +6,7 @@
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Live app            | https://skilltrace-hybrid-2026.web.app                                                                                                                             |
 | Source (Apache-2.0) | https://github.com/Kartavya1905/skilltrace-ai-hybrid                                                                                                               |
-| Chrome extension    | https://github.com/Kartavya1905/skilltrace-ai-hybrid/releases/tag/v0.2.0 (`skilltrace-extension-v0.2.0.zip`, load unpacked; ID `kecllpafndpfocijmodnoilonglpkjcf`) |
+| Chrome extension    | https://github.com/Kartavya1905/skilltrace-ai-hybrid/releases/tag/v0.2.1 (`skilltrace-extension-v0.2.1.zip`, load unpacked; ID `kecllpafndpfocijmodnoilonglpkjcf`) |
 | Demo video          | _add the YouTube link after uploading_                                                                                                                             |
 
 **For judges:** open the live app and choose **Continue in Local demo mode** to explore without an account. Sign in with Google or email to use Firebase AI Logic. On-device inference needs desktop Chrome 139+ with Chrome's built-in AI (Prompt API) enabled.
@@ -108,6 +108,7 @@ Audio is never stored. Only a short transcript and its provenance are kept.
 - **On-device classification:** two Learning Lab sessions saved to Firestore were classified as Python by Chrome's built-in model, with the SDK reporting `on_device` (8.7 s and 25.5 s).
 - **Cloud transcription:** a 12-second narration clip was transcribed accurately through Firebase AI Logic (`in_cloud`, 2.3 s).
 - **Speech-driven detection:** with only that transcript, a video titled "Lecture 7" moved from "not learning content" to **SQL (confidence 0.95)**.
+- **Real YouTube videos through the extension:** tutorials on Python, Node.js and SQL were each classified on-device into the right skill (Python; JavaScript and Node.js; SQL). On the Node.js video, a 24-second clip was transcribed **on-device** by Gemini Nano (`on_device`), and the spoken topics (backend services, APIs, client applications) appeared in the detected topics.
 
 ## Technical challenges
 
@@ -167,7 +168,7 @@ Audio is never stored. Only a short transcript and its provenance are kept.
 **Setup before recording:**
 
 - Use desktop Chrome with built-in AI enabled.
-- Install the v0.2.0 extension, turn on tracking, **Detect skills from speech** and DEMO mode, and approve `skilltrace-hybrid-2026.web.app` in the popup.
+- Install the v0.2.1 extension, turn on tracking, **Detect skills from speech** and DEMO mode, and approve `skilltrace-hybrid-2026.web.app` in the popup.
 - Sign in on the live site, and set cloud AI to **Ask**.
 - Use only SkillTrace's own lessons on screen, with no third-party videos.
 
@@ -213,8 +214,9 @@ Audio is never stored. Only a short transcript and its provenance are kept.
 
 - [x] Firebase project created and deployed: https://skilltrace-hybrid-2026.web.app (CI-gated auto-deploy)
 - [x] Public GitHub repository with an Apache-2.0 LICENSE: https://github.com/Kartavya1905/skilltrace-ai-hybrid
-- [x] Extension released: v0.2.0
-- [ ] Sign in on the live site and run the Hybrid AI modes. Install the v0.2.0 extension and confirm a speech-transcribed sync (M5 owner check).
+- [x] Extension released: v0.2.1
+- [x] Real YouTube sync with the extension: four videos (Python, JavaScript/Node.js, SQL) classified on-device, and the Node.js video's speech transcribed on-device.
+- [ ] Sign in on the live site and run the Hybrid AI modes (M5 owner check).
 - [ ] Record the demo following the script above: Chrome with built-in AI, so the on-device badge is real, and only SkillTrace's own lesson media.
 - [ ] Upload it to YouTube as **public**, under 3 minutes, and put the link in the Links table above and in the README.
 - [ ] Paste this description into Devpost, add the live app, repository and video links, and submit before **2026-11-30 17:00 ET**.

@@ -4,7 +4,7 @@ _Last updated: 2026-11-24. Deadline: 2026-11-30 17:00 ET._
 
 ## Current phase
 
-**M6 (submission).** The live app, the CI-gated deploys, the v0.2.0 extension release and the submission text are all done. Left for the owner:
+**M6 (submission).** The live app, the CI-gated deploys, the v0.2.1 extension release and the submission text are all done. Left for the owner:
 
 - the sign-in checks for M5
 - recording and uploading the demo video
@@ -62,7 +62,14 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
     - the extension E2E records a real WebM/Opus clip and pulls it into the dashboard
     - the live cloud transcription of a lesson clip was accurate (`in_cloud`, 2.3 s)
     - classification of "Lecture 7" moved from "not learning" to SQL (0.95) with the transcript
-  - **Not yet verified:** on-device audio transcription, which needs Gemini Nano with multimodal input in the owner's Chrome.
+  - **Verified on real YouTube (2026-11-24, owner's Chrome):**
+    - five extension sessions synced, all classified `on_device`: Python Tutorial 2026 (Python), Node.js Tutorial for Beginners (JavaScript 0.6, Node.js 0.4), SQL Course for Beginners (SQL), and a home-feed preview (not learning, no credit)
+    - the Node.js video's speech was transcribed **on-device** (1 clip, 24 s) and the transcript was prepended to the description
+- **Extension v0.2.1: tracking fixes from the YouTube test (2026-11-24).**
+  - **Titles:** the notification count ("(1) ...") and the " - YouTube" suffix are removed.
+  - **Home-feed previews:** on YouTube, only watch, live, embed and Shorts pages start a session; hover previews on the home feed, search and channel pages are ignored.
+  - **One video, one session:** an ad break or source reload parks the session instead of ending it, and it continues when the same video returns (`MediaSessionSwitch` in `apps/extension/src/page.ts`; parked sessions end after 3 minutes or when another video starts). Before, the SQL course was split into two sessions by a 7-second interruption.
+  - **Tests:** 13 unit tests in `apps/extension/test/page.test.ts`. The extension E2E now reloads the media source mid-playback and checks that it stays one session, with credit paused during the gap.
 - **M5 (production verification): automated part done 2026-11-24; owner checks pending.**
   - The live browser smoke test (`pnpm test:smoke`, `tests/smoke/live.spec.ts`) now runs in the pipeline after every deploy. It checks:
     - the production build boots with no console errors, and the security headers are set
@@ -75,7 +82,6 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
   - **App Check enforced for Cloud Firestore** on 2026-11-24. Firebase AI Logic was already enforced. Before enforcing, Firestore traffic was 83% verified; the 17% unverified came from direct test calls and the old, unused "SkillTrace AI Web" app.
   - **Owner checks pending** (the browser pane blocks the Google sign-in popup):
     - sign in on the live site and run the Hybrid AI modes
-    - install the v0.2.0 extension, then test YouTube per-video sessions and speech detection, including on-device transcription
 - **M6 (submission): text ready 2026-11-24.** `docs/hackathon-submission.md` is rewritten:
   - Devpost text with only verified facts and live links
   - the new speech and YouTube features, with honest limitations
@@ -88,7 +94,6 @@ Milestones M1–M6 are in docs/pipeline-milestones.md.
 
 1. **Owner checks for M5.** On the live site:
    - sign in and run Hybrid AI in all three modes
-   - with the v0.2.0 extension, sync a Python and a JavaScript YouTube video with speech detection on, and report the transcription source
 
    Then M6 (demo video and Devpost).
 
